@@ -1,0 +1,61 @@
+name: raah_app
+description: "Raah - A rental discovery app for students and people moving to a new city."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management (lightweight, works great with MVVM)
+  provider: ^6.1.2
+
+  # Secure storage for JWT tokens & persistent login
+  flutter_secure_storage: ^9.2.4
+
+  # HTTP client for REST API
+  http: ^1.2.2
+
+  # Image caching for property photos
+  cached_network_image: ^3.4.1
+
+  # Image carousel for property galleries
+  carousel_slider: ^5.0.0
+
+  # Smooth page indicator for carousels
+  smooth_page_indicator: ^1.2.0+3
+
+  # Date formatting
+  intl: ^0.19.0
+
+  # Shimmer loading effects
+  shimmer: ^3.0.0
+
+  # Google Fonts for elegant typography
+  google_fonts: ^6.2.1
+
+  # Image picker for property uploads
+  image_picker: ^1.1.2
+
+  # SVG support
+  flutter_svg: ^2.0.17
+
+  # Animations
+  animations: ^2.0.11
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
