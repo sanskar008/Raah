@@ -124,13 +124,40 @@ class ApiService {
   }
 
   // ── Response handler ──
+  // Backend returns: { success, statusCode, message, data }
   dynamic _handleResponse(http.Response response) {
     final body = response.body.isNotEmpty ? jsonDecode(response.body) : null;
+
+    // Check if response indicates failure
+    if (body != null && body['success'] == false) {
+      final message = body['message'] ?? 'Request failed';
+      final statusCode = body['statusCode'] ?? response.statusCode;
+
+      switch (statusCode) {
+        case 401:
+          throw UnauthorizedException(message: message);
+        case 404:
+          throw NotFoundException(message: message);
+        case 400:
+        case 422:
+          throw ValidationException(
+            message: message,
+            errors: body['errors'],
+          );
+        case 403:
+          throw UnauthorizedException(message: message);
+        case 409:
+          throw ValidationException(message: message);
+        default:
+          throw ServerException(message: message);
+      }
+    }
 
     switch (response.statusCode) {
       case 200:
       case 201:
-        return body;
+        // Return the data field if present, otherwise return the whole body
+        return body?['data'] ?? body;
       case 401:
         throw UnauthorizedException(
           message: body?['message'] ?? 'Unauthorized',

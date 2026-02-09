@@ -31,8 +31,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<AuthViewModel>().user;
       final ownerVM = context.read<OwnerViewModel>();
-      ownerVM.loadMyProperties(user?.id ?? '1');
-      ownerVM.loadAppointments(user?.id ?? '1');
+      ownerVM.loadMyProperties();
+      ownerVM.loadAppointments();
     });
   }
 
@@ -48,8 +48,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await ownerVM.loadMyProperties(authVM.user?.id ?? '1');
-            await ownerVM.loadAppointments(authVM.user?.id ?? '1');
+            await ownerVM.loadMyProperties();
+            await ownerVM.loadAppointments();
           },
           child: CustomScrollView(
             slivers: [

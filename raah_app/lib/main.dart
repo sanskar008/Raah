@@ -42,9 +42,9 @@ void main() async {
     apiService: apiService,
     storage: secureStorage,
   );
-  final propertyRepository = PropertyRepository();
-  final appointmentRepository = AppointmentRepository();
-  final walletRepository = WalletRepository();
+  final propertyRepository = PropertyRepository(apiService: apiService);
+  final appointmentRepository = AppointmentRepository(apiService: apiService);
+  final walletRepository = WalletRepository(apiService: apiService);
 
   // ── Create ViewModels ──
   final authViewModel = AuthViewModel(authRepository: authRepository);

@@ -47,29 +47,52 @@ class PropertyModel {
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
+    // Handle MongoDB _id format and populated ownerId/brokerId
+    final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+    
+    // Handle populated ownerId (can be object or string)
+    final ownerIdObj = json['ownerId'];
+    final ownerId = ownerIdObj is Map 
+        ? (ownerIdObj['_id']?.toString() ?? ownerIdObj['id']?.toString() ?? '')
+        : ownerIdObj?.toString() ?? json['owner_id']?.toString() ?? '';
+    
+    final ownerName = ownerIdObj is Map 
+        ? (ownerIdObj['name'] ?? '')
+        : json['ownerName'] ?? json['owner_name'] ?? '';
+    
+    final ownerPhone = ownerIdObj is Map 
+        ? (ownerIdObj['phone'] ?? '')
+        : json['ownerPhone'] ?? json['owner_phone'] ?? '';
+    
+    // Check if brokerId exists (broker listed)
+    final brokerIdObj = json['brokerId'];
+    final isBrokerListed = brokerIdObj != null;
+    
     return PropertyModel(
-      id: json['id'] ?? '',
+      id: id,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      propertyType: PropertyType.fromString(json['property_type'] ?? 'room'),
+      propertyType: PropertyType.fromString(json['propertyType'] ?? json['property_type'] ?? 'room'),
       rent: (json['rent'] ?? 0).toDouble(),
       deposit: json['deposit']?.toDouble(),
       address: json['address'] ?? '',
       area: json['area'] ?? '',
       city: json['city'] ?? '',
-      imageUrls: List<String>.from(json['image_urls'] ?? []),
+      imageUrls: List<String>.from(json['images'] ?? json['image_urls'] ?? []),
       amenities: List<String>.from(json['amenities'] ?? []),
-      ownerId: json['owner_id'] ?? '',
-      ownerName: json['owner_name'] ?? '',
-      ownerPhone: json['owner_phone'] ?? '',
-      isBrokerListed: json['is_broker_listed'] ?? false,
+      ownerId: ownerId,
+      ownerName: ownerName,
+      ownerPhone: ownerPhone,
+      isBrokerListed: isBrokerListed,
       bedrooms: json['bedrooms'],
       bathrooms: json['bathrooms'],
-      areaSqFt: json['area_sq_ft']?.toDouble(),
-      isAvailable: json['is_available'] ?? true,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
+      areaSqFt: json['areaSqFt'] ?? json['area_sq_ft']?.toDouble(),
+      isAvailable: json['isAvailable'] ?? json['is_available'] ?? true,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
     );
   }
 

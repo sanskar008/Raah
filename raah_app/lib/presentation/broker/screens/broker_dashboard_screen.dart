@@ -31,8 +31,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<AuthViewModel>().user;
       final brokerVM = context.read<BrokerViewModel>();
-      brokerVM.loadMyProperties(user?.id ?? '1');
-      brokerVM.loadWallet(user?.id ?? '1');
+      brokerVM.loadMyProperties();
+      brokerVM.loadWallet();
     });
   }
 
@@ -48,8 +48,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await brokerVM.loadMyProperties(authVM.user?.id ?? '1');
-            await brokerVM.loadWallet(authVM.user?.id ?? '1');
+            await brokerVM.loadMyProperties();
+            await brokerVM.loadWallet();
           },
           child: CustomScrollView(
             slivers: [

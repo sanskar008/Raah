@@ -35,24 +35,75 @@ class AppointmentModel {
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
+    // Handle MongoDB _id format
+    final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+    
+    // Handle populated propertyId (can be object or string)
+    final propertyIdObj = json['propertyId'] ?? json['property_id'];
+    final propertyId = propertyIdObj is Map
+        ? (propertyIdObj['_id']?.toString() ?? propertyIdObj['id']?.toString() ?? '')
+        : propertyIdObj?.toString() ?? '';
+    
+    final propertyTitle = propertyIdObj is Map
+        ? (propertyIdObj['title'] ?? '')
+        : json['propertyTitle'] ?? json['property_title'] ?? '';
+    
+    final propertyImages = propertyIdObj is Map
+        ? (propertyIdObj['images'] as List<dynamic>? ?? [])
+        : [];
+    final propertyImage = propertyImages.isNotEmpty 
+        ? propertyImages[0].toString()
+        : json['propertyImage'] ?? json['property_image'] ?? '';
+    
+    // Handle populated customerId (for received appointments)
+    final customerIdObj = json['customerId'] ?? json['customer_id'];
+    final customerId = customerIdObj is Map
+        ? (customerIdObj['_id']?.toString() ?? customerIdObj['id']?.toString() ?? '')
+        : customerIdObj?.toString() ?? '';
+    
+    final customerName = customerIdObj is Map
+        ? (customerIdObj['name'] ?? '')
+        : json['customerName'] ?? json['customer_name'] ?? '';
+    
+    final customerPhone = customerIdObj is Map
+        ? (customerIdObj['phone'] ?? '')
+        : json['customerPhone'] ?? json['customer_phone'] ?? '';
+    
+    // Handle populated ownerId
+    final ownerIdObj = json['ownerId'] ?? json['owner_id'];
+    final ownerId = ownerIdObj is Map
+        ? (ownerIdObj['_id']?.toString() ?? ownerIdObj['id']?.toString() ?? '')
+        : ownerIdObj?.toString() ?? '';
+    
+    final ownerName = ownerIdObj is Map
+        ? (ownerIdObj['name'] ?? '')
+        : json['ownerName'] ?? json['owner_name'] ?? '';
+    
+    // Handle date field (backend uses 'date' not 'scheduledDate')
+    final dateStr = json['date'] ?? json['scheduledDate'] ?? json['scheduled_date'];
+    final scheduledDate = dateStr != null 
+        ? (dateStr is DateTime ? dateStr : DateTime.parse(dateStr))
+        : DateTime.now();
+    
     return AppointmentModel(
-      id: json['id'] ?? '',
-      propertyId: json['property_id'] ?? '',
-      propertyTitle: json['property_title'] ?? '',
-      propertyImage: json['property_image'] ?? '',
-      customerId: json['customer_id'] ?? '',
-      customerName: json['customer_name'] ?? '',
-      customerPhone: json['customer_phone'] ?? '',
-      ownerId: json['owner_id'] ?? '',
-      ownerName: json['owner_name'] ?? '',
-      scheduledDate: DateTime.parse(
-          json['scheduled_date'] ?? DateTime.now().toIso8601String()),
-      scheduledTime: json['scheduled_time'] ?? '',
+      id: id,
+      propertyId: propertyId,
+      propertyTitle: propertyTitle,
+      propertyImage: propertyImage,
+      customerId: customerId,
+      customerName: customerName,
+      customerPhone: customerPhone,
+      ownerId: ownerId,
+      ownerName: ownerName,
+      scheduledDate: scheduledDate,
+      scheduledTime: json['time'] ?? json['scheduledTime'] ?? json['scheduled_time'] ?? '',
       status: AppointmentStatus.fromString(json['status'] ?? 'pending'),
       notes: json['notes'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
     );
   }
 

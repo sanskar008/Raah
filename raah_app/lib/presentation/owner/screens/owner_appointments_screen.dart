@@ -25,7 +25,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<AuthViewModel>().user;
-      context.read<OwnerViewModel>().loadAppointments(user?.id ?? '1');
+      context.read<OwnerViewModel>().loadAppointments();
     });
   }
 
@@ -53,7 +53,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
               : RefreshIndicator(
                   onRefresh: () async {
                     final user = context.read<AuthViewModel>().user;
-                    await ownerVM.loadAppointments(user?.id ?? '1');
+                    await ownerVM.loadAppointments();
                   },
                   child: ListView.builder(
                     padding:

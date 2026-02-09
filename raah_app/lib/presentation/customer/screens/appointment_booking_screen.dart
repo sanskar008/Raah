@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/network/api_service.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../data/models/property_model.dart';
@@ -79,19 +81,18 @@ class _AppointmentBookingScreenState extends State<AppointmentBookingScreen> {
 
     setState(() => _isBooking = true);
 
-    final authVM = context.read<AuthViewModel>();
+    // Create repositories with ApiService
+    final secureStorage = SecureStorageService();
+    final apiService = ApiService(storage: secureStorage);
     final detailVM = PropertyDetailViewModel(
-      propertyRepository: PropertyRepository(),
-      appointmentRepository: AppointmentRepository(),
+      propertyRepository: PropertyRepository(apiService: apiService),
+      appointmentRepository: AppointmentRepository(apiService: apiService),
     );
     detailVM.setProperty(widget.property);
 
     final success = await detailVM.bookAppointment(
       date: _selectedDate,
       time: _selectedTime!,
-      customerId: authVM.user?.id ?? '1',
-      customerName: authVM.user?.name ?? 'User',
-      customerPhone: authVM.user?.phone ?? '',
     );
 
     setState(() {

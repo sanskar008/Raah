@@ -34,13 +34,13 @@ class OwnerViewModel extends ChangeNotifier {
       _appointments.where((a) => a.status == AppointmentStatus.pending).length;
 
   // ── Load owned properties ──
-  Future<void> loadMyProperties(String userId) async {
+  Future<void> loadMyProperties() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _properties = await _propertyRepository.getMyProperties(userId);
+      _properties = await _propertyRepository.getMyProperties();
     } catch (e) {
       _error = 'Failed to load properties';
     }
@@ -50,13 +50,12 @@ class OwnerViewModel extends ChangeNotifier {
   }
 
   // ── Load incoming appointments ──
-  Future<void> loadAppointments(String ownerId) async {
+  Future<void> loadAppointments() async {
     _isAppointmentsLoading = true;
     notifyListeners();
 
     try {
-      _appointments =
-          await _appointmentRepository.getOwnerAppointments(ownerId);
+      _appointments = await _appointmentRepository.getOwnerAppointments();
     } catch (e) {
       _error = 'Failed to load appointments';
     }
@@ -69,9 +68,13 @@ class OwnerViewModel extends ChangeNotifier {
   Future<void> updateAppointmentStatus(
       String id, AppointmentStatus status) async {
     try {
-      await _appointmentRepository.updateStatus(id, status);
+      if (status == AppointmentStatus.accepted) {
+        await _appointmentRepository.acceptAppointment(id);
+      } else if (status == AppointmentStatus.rejected) {
+        await _appointmentRepository.rejectAppointment(id);
+      }
       // Refresh
-      await loadAppointments('1');
+      await loadAppointments();
     } catch (e) {
       _error = 'Failed to update appointment';
       notifyListeners();
@@ -79,12 +82,32 @@ class OwnerViewModel extends ChangeNotifier {
   }
 
   // ── Add property ──
-  Future<bool> addProperty(PropertyModel property) async {
+  Future<bool> addProperty({
+    required String title,
+    required String description,
+    required double rent,
+    required double deposit,
+    required String area,
+    required String city,
+    required String ownerId,
+    List<String>? images,
+    List<String>? amenities,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _propertyRepository.addProperty(property);
+      await _propertyRepository.addProperty(
+        title: title,
+        description: description,
+        rent: rent,
+        deposit: deposit,
+        area: area,
+        city: city,
+        ownerId: ownerId,
+        images: images,
+        amenities: amenities,
+      );
       _isLoading = false;
       notifyListeners();
       return true;

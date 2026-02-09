@@ -31,13 +31,13 @@ class BrokerViewModel extends ChangeNotifier {
   double get coinBalance => _wallet?.balance ?? 0;
 
   // ── Load broker's properties ──
-  Future<void> loadMyProperties(String userId) async {
+  Future<void> loadMyProperties() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      _properties = await _propertyRepository.getMyProperties(userId);
+      _properties = await _propertyRepository.getMyProperties();
     } catch (e) {
       _error = 'Failed to load properties';
     }
@@ -47,12 +47,12 @@ class BrokerViewModel extends ChangeNotifier {
   }
 
   // ── Load wallet ──
-  Future<void> loadWallet(String userId) async {
+  Future<void> loadWallet() async {
     _isWalletLoading = true;
     notifyListeners();
 
     try {
-      _wallet = await _walletRepository.getWallet(userId);
+      _wallet = await _walletRepository.getWallet();
     } catch (e) {
       _error = 'Failed to load wallet';
     }
@@ -64,11 +64,9 @@ class BrokerViewModel extends ChangeNotifier {
   // ── Request withdrawal ──
   Future<bool> requestWithdrawal(double amount) async {
     try {
-      final success = await _walletRepository.requestWithdrawal(amount);
-      if (success) {
-        await loadWallet('1'); // Refresh wallet
-      }
-      return success;
+      await _walletRepository.requestWithdrawal(amount);
+      await loadWallet(); // Refresh wallet
+      return true;
     } catch (e) {
       _error = 'Withdrawal failed';
       notifyListeners();
@@ -77,12 +75,34 @@ class BrokerViewModel extends ChangeNotifier {
   }
 
   // ── Add property ──
-  Future<bool> addProperty(PropertyModel property) async {
+  Future<bool> addProperty({
+    required String title,
+    required String description,
+    required double rent,
+    required double deposit,
+    required String area,
+    required String city,
+    required String ownerId,
+    List<String>? images,
+    List<String>? amenities,
+    String? brokerId,
+  }) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _propertyRepository.addProperty(property);
+      await _propertyRepository.addProperty(
+        title: title,
+        description: description,
+        rent: rent,
+        deposit: deposit,
+        area: area,
+        city: city,
+        ownerId: ownerId,
+        images: images,
+        amenities: amenities,
+        brokerId: brokerId,
+      );
       _isLoading = false;
       notifyListeners();
       return true;

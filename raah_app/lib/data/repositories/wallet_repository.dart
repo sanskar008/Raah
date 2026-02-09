@@ -1,57 +1,46 @@
+import '../../core/constants/api_endpoints.dart';
+import '../../core/network/api_service.dart';
 import '../models/wallet_model.dart';
 
 /// Wallet repository for broker coin system.
-/// Uses dummy data; replace with API calls when backend is ready.
 class WalletRepository {
+  final ApiService _apiService;
+
+  WalletRepository({required ApiService apiService}) : _apiService = apiService;
+
   // ── Get wallet balance & transactions ──
-  Future<WalletModel> getWallet(String userId) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+  Future<WalletModel> getWallet({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+
+    final response = await _apiService.get(
+      ApiEndpoints.wallet,
+      queryParams: queryParams,
+    );
+
+    // Response format: { balance: number, transactions: [...], pagination: {...} }
+    final transactionsList = response['transactions'] as List<dynamic>? ?? [];
     return WalletModel(
-      balance: 250,
-      transactions: [
-        TransactionModel(
-          id: 'txn-1',
-          type: 'earn',
-          amount: 50,
-          description: 'Listed: Cozy Studio Apartment',
-          date: DateTime.now().subtract(const Duration(days: 1)),
-        ),
-        TransactionModel(
-          id: 'txn-2',
-          type: 'earn',
-          amount: 50,
-          description: 'Listed: Single Room in HSR Layout',
-          date: DateTime.now().subtract(const Duration(days: 3)),
-        ),
-        TransactionModel(
-          id: 'txn-3',
-          type: 'withdraw',
-          amount: 100,
-          description: 'Withdrawal to bank',
-          date: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-        TransactionModel(
-          id: 'txn-4',
-          type: 'earn',
-          amount: 50,
-          description: 'Listed: 2BHK near Metro',
-          date: DateTime.now().subtract(const Duration(days: 7)),
-        ),
-        TransactionModel(
-          id: 'txn-5',
-          type: 'earn',
-          amount: 200,
-          description: 'Welcome bonus',
-          date: DateTime.now().subtract(const Duration(days: 10)),
-        ),
-      ],
+      balance: (response['balance'] ?? 0).toDouble(),
+      transactions: transactionsList
+          .map((json) => TransactionModel.fromJson(json as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   // ── Request withdrawal ──
-  Future<bool> requestWithdrawal(double amount) async {
-    await Future.delayed(const Duration(seconds: 1));
-    // TODO: Replace with actual API call
-    return true;
+  Future<Map<String, dynamic>> requestWithdrawal(double amount) async {
+    final response = await _apiService.post(
+      ApiEndpoints.walletWithdraw,
+      body: {'amount': amount},
+    );
+
+    // Response format: { newBalance: number, transaction: {...} }
+    return response as Map<String, dynamic>;
   }
 }

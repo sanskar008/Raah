@@ -21,16 +21,20 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Handle MongoDB _id format
+    final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
     return UserModel(
-      id: json['id'] ?? '',
+      id: id,
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
       role: UserRole.fromString(json['role'] ?? 'customer'),
-      profileImageUrl: json['profile_image_url'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
+      profileImageUrl: json['profileImageUrl'] ?? json['profile_image_url'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
     );
   }
 

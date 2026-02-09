@@ -35,12 +35,27 @@ class TransactionModel {
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    // Handle MongoDB _id format
+    final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
+    
+    // Map backend transaction type (CREDIT/DEBIT) to app format (earn/withdraw)
+    final backendType = json['type'] ?? '';
+    final type = backendType == 'CREDIT' 
+        ? 'earn' 
+        : backendType == 'DEBIT' 
+            ? 'withdraw' 
+            : json['type'] ?? 'earn';
+    
     return TransactionModel(
-      id: json['id'] ?? '',
-      type: json['type'] ?? 'earn',
+      id: id,
+      type: type,
       amount: (json['amount'] ?? 0).toDouble(),
-      description: json['description'] ?? '',
-      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
+      description: json['reason'] ?? json['description'] ?? '',
+      date: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : json['date'] != null
+              ? DateTime.parse(json['date'])
+              : DateTime.now(),
     );
   }
 }

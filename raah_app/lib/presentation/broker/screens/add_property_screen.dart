@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -7,6 +8,10 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../domain/enums/property_type.dart';
+import '../../../domain/enums/user_role.dart';
+import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../../broker/viewmodels/broker_viewmodel.dart';
+import '../../owner/viewmodels/owner_viewmodel.dart';
 
 /// Add property form — multi-step feel with image upload placeholders.
 /// Used by both Broker and Owner flows.
@@ -63,29 +68,103 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
     setState(() => _isSubmitting = true);
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final authVM = context.read<AuthViewModel>();
+      final user = authVM.user;
+      if (user == null) {
+        throw Exception('User not logged in');
+      }
 
-    setState(() => _isSubmitting = false);
+      final rent = double.parse(_rentController.text);
+      final deposit = double.parse(_depositController.text);
+      final amenities = _selectedAmenities.isEmpty ? null : _selectedAmenities;
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                widget.showCoinsInfo
-                    ? 'Property added! +50 coins earned'
-                    : 'Property added successfully!',
+      bool success;
+      if (user.role == UserRole.broker) {
+        final brokerVM = context.read<BrokerViewModel>();
+        success = await brokerVM.addProperty(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          rent: rent,
+          deposit: deposit,
+          area: _areaController.text.trim(),
+          city: _cityController.text.trim(),
+          ownerId: user.id, // For brokers, they can set ownerId or use their own
+          amenities: amenities,
+          brokerId: user.id,
+        );
+      } else if (user.role == UserRole.owner) {
+        final ownerVM = context.read<OwnerViewModel>();
+        success = await ownerVM.addProperty(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          rent: rent,
+          deposit: deposit,
+          area: _areaController.text.trim(),
+          city: _cityController.text.trim(),
+          ownerId: user.id,
+          amenities: amenities,
+        );
+      } else {
+        throw Exception('Only brokers and owners can add properties');
+      }
+
+      setState(() => _isSubmitting = false);
+
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.showCoinsInfo
+                        ? 'Property added! +10 coins earned'
+                        : 'Property added successfully!',
+                  ),
+                ],
               ),
-            ],
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    user.role == UserRole.broker
+                        ? context.read<BrokerViewModel>().error ?? 'Failed to add property'
+                        : context.read<OwnerViewModel>().error ?? 'Failed to add property',
+                  ),
+                ],
+              ),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Error: ${e.toString()}'),
+              ],
+            ),
+            backgroundColor: AppColors.error,
           ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      Navigator.pop(context);
+        );
+      }
     }
   }
 

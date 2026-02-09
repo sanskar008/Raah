@@ -55,42 +55,26 @@ class PropertyDetailViewModel extends ChangeNotifier {
   Future<bool> bookAppointment({
     required DateTime date,
     required String time,
-    required String customerId,
-    required String customerName,
-    required String customerPhone,
-    String? notes,
   }) async {
     if (_property == null) return false;
 
     _isBooking = true;
     _bookingSuccess = false;
+    _error = null;
     notifyListeners();
 
     try {
       await _appointmentRepository.bookAppointment(
-        AppointmentModel(
-          id: 'apt-${DateTime.now().millisecondsSinceEpoch}',
-          propertyId: _property!.id,
-          propertyTitle: _property!.title,
-          propertyImage:
-              _property!.imageUrls.isNotEmpty ? _property!.imageUrls[0] : '',
-          customerId: customerId,
-          customerName: customerName,
-          customerPhone: customerPhone,
-          ownerId: _property!.ownerId,
-          ownerName: _property!.ownerName,
-          scheduledDate: date,
-          scheduledTime: time,
-          notes: notes,
-          createdAt: DateTime.now(),
-        ),
+        propertyId: _property!.id,
+        date: date,
+        time: time,
       );
       _bookingSuccess = true;
       _isBooking = false;
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Failed to book appointment';
+      _error = e.toString();
       _isBooking = false;
       notifyListeners();
       return false;
