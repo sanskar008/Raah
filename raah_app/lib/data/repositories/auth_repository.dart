@@ -9,7 +9,7 @@ import '../models/user_model.dart';
 /// Currently uses dummy data; swap with real API calls when backend is ready.
 class AuthRepository {
   // ignore: unused_field — will be used when real API is connected
-  final ApiService _apiService; // ignore: unused_field
+  final ApiService _apiService;
   final SecureStorageService _storage;
 
   AuthRepository({
@@ -106,6 +106,11 @@ class AuthRepository {
   // ── Check if token exists ──
   Future<bool> isLoggedIn() async {
     return await _storage.containsKey(AppConstants.tokenKey);
+  }
+
+  // ── Persist updated user data locally ──
+  Future<void> persistUser(UserModel user) async {
+    await _storage.write(AppConstants.userKey, jsonEncode(user.toJson()));
   }
 
   // ── Logout ──

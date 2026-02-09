@@ -3,17 +3,19 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../data/models/property_model.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../../profile/screens/profile_screen.dart';
 import '../viewmodels/home_viewmodel.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/property_card.dart';
 import 'property_detail_screen.dart';
 
 /// Customer home feed — scrollable property cards with search & filters.
-/// Inspired by Airbnb/Housing.com layout.
+/// Includes drawer for navigation and profile access.
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
 
@@ -22,10 +24,11 @@ class CustomerHomeScreen extends StatefulWidget {
 }
 
 class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
-    // Load properties on first build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeViewModel>().loadProperties();
     });
@@ -131,7 +134,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
     final homeVM = context.watch<HomeViewModel>();
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: Column(
           children: [
@@ -145,6 +150,24 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
               ),
               child: Row(
                 children: [
+                  // Hamburger menu
+                  GestureDetector(
+                    onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceVariant,
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusSm),
+                      ),
+                      child: const Icon(
+                        Icons.menu_rounded,
+                        color: AppColors.textPrimary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppConstants.spacingMd),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,9 +186,16 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       ],
                     ),
                   ),
-                  // Profile avatar
+                  // Profile avatar → opens profile page
                   GestureDetector(
-                    onTap: () => _showProfileMenu(context),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProfileScreen(),
+                        ),
+                      );
+                    },
                     child: CircleAvatar(
                       radius: 22,
                       backgroundColor: AppColors.primary,
@@ -255,63 +285,6 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             onTap: () => _openPropertyDetail(property),
           );
         },
-      ),
-    );
-  }
-
-  void _showProfileMenu(BuildContext context) {
-    final authVM = context.read<AuthViewModel>();
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(AppConstants.spacingLg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingLg),
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.primary,
-              child: Text(
-                (authVM.user?.name ?? 'U')[0].toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 28,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            Text(authVM.user?.name ?? '', style: AppTextStyles.h4),
-            Text(
-              authVM.user?.email ?? '',
-              style: AppTextStyles.bodySmall,
-            ),
-            const SizedBox(height: AppConstants.spacingLg),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded, color: AppColors.error),
-              title: Text(
-                'Sign Out',
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                authVM.logout();
-              },
-            ),
-            const SizedBox(height: AppConstants.spacingSm),
-          ],
-        ),
       ),
     );
   }

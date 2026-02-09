@@ -4,15 +4,17 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/extensions.dart';
+import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../../profile/screens/profile_screen.dart';
 import '../viewmodels/broker_viewmodel.dart';
 import 'add_property_screen.dart';
 import 'wallet_screen.dart';
 
 /// Broker dashboard — shows uploaded properties, coin balance,
-/// quick actions for adding properties and accessing wallet.
+/// quick actions. Includes drawer for full navigation.
 class BrokerDashboardScreen extends StatefulWidget {
   const BrokerDashboardScreen({super.key});
 
@@ -21,6 +23,8 @@ class BrokerDashboardScreen extends StatefulWidget {
 }
 
 class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +42,9 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
     final brokerVM = context.watch<BrokerViewModel>();
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -53,6 +59,25 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                   padding: const EdgeInsets.all(AppConstants.spacingLg),
                   child: Row(
                     children: [
+                      // Hamburger menu
+                      GestureDetector(
+                        onTap: () =>
+                            _scaffoldKey.currentState?.openDrawer(),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(
+                                AppConstants.radiusSm),
+                          ),
+                          child: const Icon(
+                            Icons.menu_rounded,
+                            color: AppColors.textPrimary,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppConstants.spacingMd),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,12 +89,21 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text('Broker Dashboard', style: AppTextStyles.h3),
+                            Text('Broker Dashboard',
+                                style: AppTextStyles.h3),
                           ],
                         ),
                       ),
+                      // Profile avatar → opens profile page
                       GestureDetector(
-                        onTap: () => _showProfileMenu(context, authVM),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ProfileScreen(),
+                            ),
+                          );
+                        },
                         child: CircleAvatar(
                           radius: 22,
                           backgroundColor: AppColors.accent,
@@ -119,7 +153,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const AddPropertyScreen(),
+                                builder: (_) =>
+                                    const AddPropertyScreen(),
                               ),
                             );
                           },
@@ -167,7 +202,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
               // ── Properties List ──
               if (brokerVM.isLoading)
                 const SliverFillRemaining(
-                  child: LoadingWidget(message: 'Loading properties...'),
+                  child: LoadingWidget(
+                      message: 'Loading properties...'),
                 )
               else if (brokerVM.properties.isEmpty)
                 SliverFillRemaining(
@@ -181,7 +217,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const AddPropertyScreen(),
+                          builder: (_) =>
+                              const AddPropertyScreen(),
                         ),
                       );
                     },
@@ -202,8 +239,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(
                                 AppConstants.radiusMd),
-                            border:
-                                Border.all(color: AppColors.cardBorder),
+                            border: Border.all(
+                                color: AppColors.cardBorder),
                           ),
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(
@@ -217,21 +254,24 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                                       width: 64,
                                       height: 64,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _imagePlaceholder(),
+                                      errorBuilder:
+                                          (_, __, ___) =>
+                                              _imagePlaceholder(),
                                     )
                                   : _imagePlaceholder(),
                             ),
                             title: Text(
                               property.title,
-                              style: AppTextStyles.bodyLarge.copyWith(
+                              style:
+                                  AppTextStyles.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 const SizedBox(height: 4),
                                 Text(
@@ -246,7 +286,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                               ],
                             ),
                             trailing: Container(
-                              padding: const EdgeInsets.symmetric(
+                              padding:
+                                  const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
@@ -256,13 +297,15 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                                         .withValues(alpha: 0.1)
                                     : AppColors.error
                                         .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius:
+                                    BorderRadius.circular(6),
                               ),
                               child: Text(
                                 property.isAvailable
                                     ? 'Active'
                                     : 'Inactive',
-                                style: AppTextStyles.caption.copyWith(
+                                style:
+                                    AppTextStyles.caption.copyWith(
                                   color: property.isAvailable
                                       ? AppColors.success
                                       : AppColors.error,
@@ -362,7 +405,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+              borderRadius:
+                  BorderRadius.circular(AppConstants.radiusMd),
             ),
             child: const Icon(
               Icons.monetization_on_rounded,
@@ -387,7 +431,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         padding: const EdgeInsets.all(AppConstants.spacingMd),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+          borderRadius:
+              BorderRadius.circular(AppConstants.radiusMd),
           border: Border.all(color: AppColors.cardBorder),
         ),
         child: Row(
@@ -418,76 +463,8 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
       width: 64,
       height: 64,
       color: AppColors.surfaceVariant,
-      child: const Icon(Icons.image_outlined, color: AppColors.textHint),
-    );
-  }
-
-  void _showProfileMenu(BuildContext context, AuthViewModel authVM) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(AppConstants.spacingLg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.divider,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingLg),
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.accent,
-              child: Text(
-                (authVM.user?.name ?? 'B')[0].toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 28,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            Text(authVM.user?.name ?? '', style: AppTextStyles.h4),
-            Text(authVM.user?.email ?? '', style: AppTextStyles.bodySmall),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.accentSoft,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Broker',
-                style: AppTextStyles.label.copyWith(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingLg),
-            ListTile(
-              leading: const Icon(Icons.logout_rounded, color: AppColors.error),
-              title: Text(
-                'Sign Out',
-                style:
-                    AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
-              ),
-              onTap: () {
-                Navigator.pop(ctx);
-                authVM.logout();
-              },
-            ),
-            const SizedBox(height: AppConstants.spacingSm),
-          ],
-        ),
-      ),
+      child: const Icon(Icons.image_outlined,
+          color: AppColors.textHint),
     );
   }
 }

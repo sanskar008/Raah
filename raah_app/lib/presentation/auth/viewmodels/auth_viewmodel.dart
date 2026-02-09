@@ -100,6 +100,37 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ── Update Profile ──
+  Future<void> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    if (_user == null) return;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // TODO: Replace with actual API call
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      _user = _user!.copyWith(
+        name: name,
+        email: email,
+        phone: phone,
+      );
+
+      // Persist updated user locally
+      await _authRepository.persistUser(_user!);
+    } catch (e) {
+      _error = e.toString();
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
   // ── Logout ──
   Future<void> logout() async {
     await _authRepository.logout();
