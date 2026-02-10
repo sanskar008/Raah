@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../data/models/property_model.dart';
 import '../../../data/models/appointment_model.dart';
 import '../../../data/repositories/property_repository.dart';
@@ -38,7 +39,7 @@ class PropertyDetailViewModel extends ChangeNotifier {
     try {
       _property = await _propertyRepository.getPropertyById(id);
     } catch (e) {
-      _error = 'Failed to load property details';
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;
@@ -74,7 +75,7 @@ class PropertyDetailViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getContextMessage('appointment', e);
       _isBooking = false;
       notifyListeners();
       return false;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../domain/enums/user_role.dart';
@@ -36,7 +37,7 @@ class AuthViewModel extends ChangeNotifier {
         _user = await _authRepository.getCurrentUser();
       }
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;
@@ -62,7 +63,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getContextMessage('login', e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -81,7 +82,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getContextMessage('login', e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -106,7 +107,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getContextMessage('login', e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -137,7 +138,7 @@ class AuthViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getContextMessage('signup', e);
       _isLoading = false;
       notifyListeners();
       return false;
@@ -168,7 +169,7 @@ class AuthViewModel extends ChangeNotifier {
       // Persist updated user locally
       await _authRepository.persistUser(_user!);
     } catch (e) {
-      _error = e.toString();
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;

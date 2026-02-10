@@ -54,10 +54,14 @@ class ImageUploadService {
         return imageUrl;
       } else {
         debugPrint('❌ Upload failed: ${response.statusCode} - ${response.body}');
-        throw Exception('Failed to upload image: ${response.statusCode}');
+        throw Exception('Unable to upload image. Please try again.');
       }
     } catch (e) {
       debugPrint('❌ Image upload error: $e');
+      // Re-throw with friendly message if it's not already an Exception with message
+      if (e is Exception && e.toString().contains('Exception')) {
+        throw Exception('Unable to upload image. Please check your internet connection and try again.');
+      }
       rethrow;
     }
   }

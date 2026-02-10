@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../data/models/property_model.dart';
 import '../../../data/repositories/property_repository.dart';
 import '../../../domain/enums/property_type.dart';
@@ -49,7 +50,7 @@ class HomeViewModel extends ChangeNotifier {
         propertyType: _selectedType,
       );
     } catch (e) {
-      _error = 'Failed to load properties. Please try again.';
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;

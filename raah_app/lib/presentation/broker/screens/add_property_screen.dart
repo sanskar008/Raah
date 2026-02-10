@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/services/image_upload_service.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
@@ -78,12 +79,12 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     if (!ImageUploadService.isConfigured()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              '⚠️ Cloudinary not configured. Please add your credentials in image_upload_service.dart',
+          const SnackBar(
+            content: Text(
+              'Image upload service is not configured. Please contact support.',
             ),
             backgroundColor: AppColors.warning,
-            duration: const Duration(seconds: 5),
+            duration: Duration(seconds: 5),
           ),
         );
       }
@@ -120,7 +121,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         imageUrls = await ImageUploadService.uploadImages(_selectedImages);
         
         if (imageUrls.isEmpty) {
-          throw Exception('Failed to upload images. Please try again.');
+          throw Exception('Unable to upload images. Please check your internet connection and try again.');
         }
       }
 
@@ -208,16 +209,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           );
         }
       }
-    } catch (e) {
+      } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
+        final errorMessage = ErrorMessages.getContextMessage('image_upload', e);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
                 const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 8),
-                Text('Error: ${e.toString()}'),
+                Expanded(child: Text(errorMessage)),
               ],
             ),
             backgroundColor: AppColors.error,

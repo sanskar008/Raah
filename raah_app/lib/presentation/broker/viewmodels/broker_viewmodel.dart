@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../data/models/property_model.dart';
 import '../../../data/models/wallet_model.dart';
 import '../../../data/repositories/property_repository.dart';
@@ -39,7 +40,7 @@ class BrokerViewModel extends ChangeNotifier {
     try {
       _properties = await _propertyRepository.getMyProperties();
     } catch (e) {
-      _error = 'Failed to load properties';
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;
@@ -54,7 +55,7 @@ class BrokerViewModel extends ChangeNotifier {
     try {
       _wallet = await _walletRepository.getWallet();
     } catch (e) {
-      _error = 'Failed to load wallet';
+      _error = ErrorMessages.getContextMessage('wallet', e);
     }
 
     _isWalletLoading = false;
@@ -68,7 +69,7 @@ class BrokerViewModel extends ChangeNotifier {
       await loadWallet(); // Refresh wallet
       return true;
     } catch (e) {
-      _error = 'Withdrawal failed';
+      _error = ErrorMessages.getContextMessage('wallet', e);
       notifyListeners();
       return false;
     }
@@ -107,7 +108,7 @@ class BrokerViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Failed to add property';
+      _error = ErrorMessages.getContextMessage('property_add', e);
       _isLoading = false;
       notifyListeners();
       return false;

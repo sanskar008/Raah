@@ -17,17 +17,17 @@ class NetworkException extends ApiException {
 }
 
 class UnauthorizedException extends ApiException {
-  UnauthorizedException({String message = 'Unauthorized. Please login again.'})
+  UnauthorizedException({String message = 'Your session has expired. Please login again.'})
       : super(message: message, statusCode: 401);
 }
 
 class ServerException extends ApiException {
-  ServerException({String message = 'Server error. Please try again later.'})
+  ServerException({String message = 'Our servers are experiencing issues. Please try again in a moment.'})
       : super(message: message, statusCode: 500);
 }
 
 class NotFoundException extends ApiException {
-  NotFoundException({String message = 'Resource not found.'})
+  NotFoundException({String message = 'The requested information could not be found.'})
       : super(message: message, statusCode: 404);
 }
 
@@ -35,7 +35,7 @@ class ValidationException extends ApiException {
   final Map<String, dynamic>? errors;
 
   ValidationException({
-    String message = 'Validation failed.',
+    String message = 'Please check your input and try again.',
     this.errors,
   }) : super(message: message, statusCode: 422);
 }

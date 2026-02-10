@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/error_messages.dart';
 import '../../../data/models/property_model.dart';
 import '../../../data/models/appointment_model.dart';
 import '../../../data/repositories/property_repository.dart';
@@ -42,7 +43,7 @@ class OwnerViewModel extends ChangeNotifier {
     try {
       _properties = await _propertyRepository.getMyProperties();
     } catch (e) {
-      _error = 'Failed to load properties';
+      _error = ErrorMessages.getFriendlyMessage(e);
     }
 
     _isLoading = false;
@@ -57,7 +58,7 @@ class OwnerViewModel extends ChangeNotifier {
     try {
       _appointments = await _appointmentRepository.getOwnerAppointments();
     } catch (e) {
-      _error = 'Failed to load appointments';
+      _error = ErrorMessages.getContextMessage('appointment', e);
     }
 
     _isAppointmentsLoading = false;
@@ -76,7 +77,7 @@ class OwnerViewModel extends ChangeNotifier {
       // Refresh
       await loadAppointments();
     } catch (e) {
-      _error = 'Failed to update appointment';
+      _error = ErrorMessages.getContextMessage('appointment', e);
       notifyListeners();
     }
   }
@@ -112,7 +113,7 @@ class OwnerViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Failed to add property';
+      _error = ErrorMessages.getContextMessage('property_add', e);
       _isLoading = false;
       notifyListeners();
       return false;
