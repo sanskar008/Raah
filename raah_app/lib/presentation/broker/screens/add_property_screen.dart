@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/services/image_upload_service.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
@@ -40,6 +43,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   PropertyType _selectedType = PropertyType.room;
   final List<String> _selectedAmenities = [];
   bool _isSubmitting = false;
+  
+  // Image handling
+  final ImagePicker _imagePicker = ImagePicker();
+  final List<File> _selectedImages = [];
+  bool _isUploadingImages = false;
 
   final List<String> _allAmenities = [
     'WiFi', 'AC', 'Parking', 'Gym', 'Swimming Pool', 'Kitchen',
@@ -66,9 +74,58 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   Future<void> _submitProperty() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isSubmitting = true);
+    // Check Cloudinary configuration
+    if (!ImageUploadService.isConfigured()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '⚠️ Cloudinary not configured. Please add your credentials in image_upload_service.dart',
+            ),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _isUploadingImages = _selectedImages.isNotEmpty;
+    });
 
     try {
+      // Upload images first
+      List<String> imageUrls = [];
+      if (_selectedImages.isNotEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Uploading images...'),
+                ],
+              ),
+            ),
+          );
+        }
+
+        imageUrls = await ImageUploadService.uploadImages(_selectedImages);
+        
+        if (imageUrls.isEmpty) {
+          throw Exception('Failed to upload images. Please try again.');
+        }
+      }
+
+      setState(() => _isUploadingImages = false);
+
       final authVM = context.read<AuthViewModel>();
       final user = authVM.user;
       if (user == null) {
@@ -92,6 +149,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           ownerId: user.id, // For brokers, they can set ownerId or use their own
           amenities: amenities,
           brokerId: user.id,
+          images: imageUrls.isNotEmpty ? imageUrls : null,
         );
       } else if (user.role == UserRole.owner) {
         final ownerVM = context.read<OwnerViewModel>();
@@ -104,6 +162,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           city: _cityController.text.trim(),
           ownerId: user.id,
           amenities: amenities,
+          images: imageUrls.isNotEmpty ? imageUrls : null,
         );
       } else {
         throw Exception('Only brokers and owners can add properties');
@@ -431,9 +490,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
               // ── Submit ──
               CustomButton(
-                text: 'Submit Property',
-                onPressed: _submitProperty,
-                isLoading: _isSubmitting,
+                text: _isUploadingImages ? 'Uploading Images...' : 'Submit Property',
+                onPressed: (_isSubmitting || _isUploadingImages) ? null : _submitProperty,
+                isLoading: _isSubmitting || _isUploadingImages,
                 icon: Icons.upload_rounded,
               ),
 
@@ -445,38 +504,157 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     );
   }
 
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
+      
+      if (pickedFiles.isEmpty) return;
+
+      // Limit to 5 images total
+      final remainingSlots = 5 - _selectedImages.length;
+      if (remainingSlots <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Maximum 5 images allowed'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+        return;
+      }
+
+      final filesToAdd = pickedFiles.take(remainingSlots).toList();
+      
+      setState(() {
+        for (var file in filesToAdd) {
+          _selectedImages.add(File(file.path));
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking images: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
   Widget _buildImageUploader() {
-    return Container(
-      height: 120,
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: AppColors.divider,
-          style: BorderStyle.solid,
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.cloud_upload_outlined,
-              size: 36,
-              color: AppColors.textHint,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Selected images grid
+        if (_selectedImages.isNotEmpty)
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _selectedImages.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index < _selectedImages.length - 1
+                        ? AppConstants.spacingSm
+                        : 0,
+                  ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                          border: Border.all(color: AppColors.divider),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                          child: Image.file(
+                            _selectedImages[index],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.broken_image);
+                            },
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => _removeImage(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Tap to upload images',
-              style: AppTextStyles.bodySmall,
+          ),
+        
+        // Upload button
+        if (_selectedImages.length < 5)
+          GestureDetector(
+            onTap: _pickImages,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: AppColors.divider,
+                  style: BorderStyle.solid,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 36,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _selectedImages.isEmpty
+                          ? 'Tap to add images'
+                          : 'Add more images',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Text(
+                      '${_selectedImages.length}/5 images',
+                      style: AppTextStyles.caption,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            Text(
-              'Max 5 images • JPG, PNG',
-              style: AppTextStyles.caption,
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 
