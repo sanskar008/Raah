@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
+  final _otpFocusNode = FocusNode();
   
   bool _otpSent = false;
   bool _isResendingOTP = false;
@@ -55,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen>
     _animController.dispose();
     _phoneController.dispose();
     _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -74,7 +76,9 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         );
         // Auto-focus OTP field
-        FocusScope.of(context).requestFocus(FocusNode());
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _otpFocusNode.requestFocus();
+        });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -189,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen>
                       validator: (v) => Validators.phone(v),
                       keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
-                      enabled: !_otpSent,
+                      readOnly: _otpSent,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
@@ -220,6 +224,8 @@ class _LoginScreenState extends State<LoginScreen>
                         },
                         keyboardType: TextInputType.number,
                         textInputAction: TextInputAction.done,
+                        focusNode: _otpFocusNode,
+                        onSubmitted: (_) => _handleVerifyOTP(),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                           LengthLimitingTextInputFormatter(6),
@@ -229,7 +235,6 @@ class _LoginScreenState extends State<LoginScreen>
                           color: AppColors.textHint,
                           size: 20,
                         ),
-                        onSubmitted: (_) => _handleVerifyOTP(),
                       ),
 
                       const SizedBox(height: AppConstants.spacingSm),

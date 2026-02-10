@@ -21,6 +21,7 @@ class CustomTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final bool autofocus;
+  final ValueChanged<String>? onSubmitted;
 
   const CustomTextField({
     super.key,
@@ -41,6 +42,7 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.textInputAction,
     this.autofocus = false,
+    this.onSubmitted,
   });
 
   @override
@@ -72,6 +74,7 @@ class CustomTextField extends StatelessWidget {
           focusNode: focusNode,
           textInputAction: textInputAction,
           autofocus: autofocus,
+          onFieldSubmitted: onSubmitted,
           style: Theme.of(context).textTheme.bodyLarge,
           decoration: InputDecoration(
             hintText: hint,
