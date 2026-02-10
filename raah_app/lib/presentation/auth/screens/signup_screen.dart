@@ -72,9 +72,10 @@ class _SignupScreenState extends State<SignupScreen>
     }
 
     final authVM = context.read<AuthViewModel>();
+    final email = _emailController.text.trim();
     final success = await authVM.signup(
       name: _nameController.text.trim(),
-      email: _emailController.text.trim(),
+      email: email.isEmpty ? null : email,
       phone: _phoneController.text.trim(),
       password: _passwordController.text,
       role: _selectedRole,
@@ -152,12 +153,17 @@ class _SignupScreenState extends State<SignupScreen>
 
                 const SizedBox(height: AppConstants.spacingMd),
 
-                // ── Email ──
+                // ── Email (Optional) ──
                 CustomTextField(
-                  label: 'Email',
+                  label: 'Email (Optional)',
                   hint: 'Enter your email',
                   controller: _emailController,
-                  validator: Validators.email,
+                  validator: (v) {
+                    if (v != null && v.trim().isNotEmpty) {
+                      return Validators.email(v);
+                    }
+                    return null;
+                  },
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
                   prefixIcon: const Icon(

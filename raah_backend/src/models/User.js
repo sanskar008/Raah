@@ -12,8 +12,9 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: false,
       unique: true,
+      sparse: true, // Allows multiple null values
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
@@ -21,6 +22,7 @@ const userSchema = new mongoose.Schema(
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
+      unique: true,
       trim: true,
       match: [/^\d{10}$/, 'Phone number must be 10 digits'],
     },
@@ -50,7 +52,8 @@ const userSchema = new mongoose.Schema(
 );
 
 /* ── Indexes ─────────────────────────────────────── */
-userSchema.index({ email: 1 });
+userSchema.index({ email: 1 }, { sparse: true });
+userSchema.index({ phone: 1 });
 userSchema.index({ role: 1 });
 
 /* ── Pre-save hook: hash password ────────────────── */

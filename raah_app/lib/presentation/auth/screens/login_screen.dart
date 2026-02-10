@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -9,8 +10,7 @@ import '../../../core/widgets/custom_text_field.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'signup_screen.dart';
 
-/// Login screen — clean, minimal, premium.
-/// Email + password with smooth animations.
+/// Login screen — phone number + OTP authentication.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,9 +21,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
+  
+  bool _otpSent = false;
+  bool _isResendingOTP = false;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -51,29 +53,63 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _animController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleSendOTP() async {
     if (!_formKey.currentState!.validate()) return;
 
     final authVM = context.read<AuthViewModel>();
-    final success = await authVM.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
+    final success = await authVM.sendOTP(phone: _phoneController.text.trim());
+
+    if (mounted) {
+      if (success) {
+        setState(() => _otpSent = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP sent successfully! Use 123456 for demo.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        // Auto-focus OTP field
+        FocusScope.of(context).requestFocus(FocusNode());
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authVM.error ?? 'Failed to send OTP'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleVerifyOTP() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final authVM = context.read<AuthViewModel>();
+    final success = await authVM.verifyOTP(
+      phone: _phoneController.text.trim(),
+      otp: _otpController.text.trim(),
     );
 
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authVM.error ?? 'Login failed'),
+          content: Text(authVM.error ?? 'Invalid OTP'),
           backgroundColor: AppColors.error,
         ),
       );
     }
     // Navigation is handled by the app's auth state listener
+  }
+
+  Future<void> _resendOTP() async {
+    setState(() => _isResendingOTP = true);
+    await _handleSendOTP();
+    setState(() => _isResendingOTP = false);
   }
 
   @override
@@ -135,7 +171,9 @@ class _LoginScreenState extends State<LoginScreen>
                     Text('Welcome back', style: AppTextStyles.h2),
                     const SizedBox(height: AppConstants.spacingXs),
                     Text(
-                      'Sign in to continue exploring rentals',
+                      _otpSent
+                          ? 'Enter the OTP sent to your phone'
+                          : 'Enter your phone number to continue',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -143,74 +181,86 @@ class _LoginScreenState extends State<LoginScreen>
 
                     const SizedBox(height: AppConstants.spacingXl),
 
-                    // ── Email Field ──
+                    // ── Phone Number Field ──
                     CustomTextField(
-                      label: 'Email',
-                      hint: 'Enter your email',
-                      controller: _emailController,
-                      validator: Validators.email,
-                      keyboardType: TextInputType.emailAddress,
+                      label: 'Phone Number',
+                      hint: '9876543210',
+                      controller: _phoneController,
+                      validator: (v) => Validators.phone(v),
+                      keyboardType: TextInputType.phone,
                       textInputAction: TextInputAction.next,
+                      enabled: !_otpSent,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
                       prefixIcon: const Icon(
-                        Icons.mail_outline_rounded,
+                        Icons.phone_outlined,
                         color: AppColors.textHint,
                         size: 20,
                       ),
                     ),
 
-                    const SizedBox(height: AppConstants.spacingMd),
+                    if (_otpSent) ...[
+                      const SizedBox(height: AppConstants.spacingMd),
 
-                    // ── Password Field ──
-                    CustomTextField(
-                      label: 'Password',
-                      hint: 'Enter your password',
-                      controller: _passwordController,
-                      validator: Validators.password,
-                      obscureText: _obscurePassword,
-                      textInputAction: TextInputAction.done,
-                      prefixIcon: const Icon(
-                        Icons.lock_outline_rounded,
-                        color: AppColors.textHint,
-                        size: 20,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
+                      // ── OTP Field ──
+                      CustomTextField(
+                        label: 'OTP',
+                        hint: '123456',
+                        controller: _otpController,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'OTP is required';
+                          }
+                          if (v.length != 6) {
+                            return 'OTP must be 6 digits';
+                          }
+                          return null;
+                        },
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
                           color: AppColors.textHint,
                           size: 20,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onSubmitted: (_) => _handleVerifyOTP(),
                       ),
-                    ),
 
-                    // ── Forgot Password ──
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // TODO: Implement forgot password
-                        },
-                        child: Text(
-                          'Forgot Password?',
-                          style: AppTextStyles.label.copyWith(
-                            color: AppColors.primary,
-                          ),
+                      const SizedBox(height: AppConstants.spacingSm),
+
+                      // ── Resend OTP ──
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isResendingOTP ? null : _resendOTP,
+                          child: _isResendingOTP
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(
+                                  'Resend OTP',
+                                  style: AppTextStyles.label.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
                         ),
                       ),
-                    ),
+                    ],
 
                     const SizedBox(height: AppConstants.spacingSm),
 
-                    // ── Login Button ──
+                    // ── Action Button ──
                     CustomButton(
-                      text: 'Sign In',
-                      onPressed: _handleLogin,
+                      text: _otpSent ? 'Verify & Login' : 'Send OTP',
+                      onPressed: _otpSent ? _handleVerifyOTP : _handleSendOTP,
                       isLoading: authVM.isLoading,
                     ),
 
@@ -234,7 +284,9 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(width: AppConstants.spacingSm),
                           Expanded(
                             child: Text(
-                              'Demo: Use any email to login. Use "broker@" or "owner@" prefix for different roles.',
+                              _otpSent
+                                  ? 'Demo OTP: 123456 (works for any phone number)'
+                                  : 'Enter your 10-digit phone number. Demo OTP will be 123456',
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textPrimary,
                               ),

@@ -44,7 +44,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ── Login ──
+  // ── Login (email/password - kept for backward compatibility) ──
   Future<bool> login({
     required String email,
     required String password,
@@ -69,10 +69,54 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  // ── Send OTP ──
+  Future<bool> sendOTP({required String phone}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.sendOTP(phone: phone);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ── Verify OTP and Login ──
+  Future<bool> verifyOTP({
+    required String phone,
+    required String otp,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _user = await _authRepository.verifyOTP(
+        phone: phone,
+        otp: otp,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   // ── Signup ──
   Future<bool> signup({
     required String name,
-    required String email,
+    String? email,
     required String phone,
     required String password,
     required UserRole role,

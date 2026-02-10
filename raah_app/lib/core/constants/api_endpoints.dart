@@ -8,6 +8,8 @@ class ApiEndpoints {
   // ── Auth ──
   static const String login = '$baseUrl/auth/login';
   static const String signup = '$baseUrl/auth/signup';
+  static const String sendOTP = '$baseUrl/auth/send-otp';
+  static const String verifyOTP = '$baseUrl/auth/verify-otp';
   static const String getMe = '$baseUrl/auth/me';
 
   // ── Properties ──

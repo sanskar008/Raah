@@ -42,23 +42,65 @@ class AuthRepository {
     return user;
   }
 
+  // ── Send OTP ──
+  Future<void> sendOTP({required String phone}) async {
+    await _apiService.post(
+      ApiEndpoints.sendOTP,
+      body: {'phone': phone},
+      auth: false,
+    );
+  }
+
+  // ── Verify OTP and Login ──
+  Future<UserModel> verifyOTP({
+    required String phone,
+    required String otp,
+  }) async {
+    final response = await _apiService.post(
+      ApiEndpoints.verifyOTP,
+      body: {
+        'phone': phone,
+        'otp': otp,
+      },
+      auth: false,
+    );
+
+    // Response format: { user: {...}, token: "..." }
+    final userData = response['user'] ?? response;
+    final token = response['token'] ?? '';
+
+    final user = UserModel.fromJson(userData);
+
+    // Persist auth data
+    await _storage.write(AppConstants.tokenKey, token);
+    await _storage.write(AppConstants.userKey, jsonEncode(user.toJson()));
+    await _storage.write(AppConstants.roleKey, user.role.value);
+
+    return user;
+  }
+
   // ── Signup ──
   Future<UserModel> signup({
     required String name,
-    required String email,
+    String? email,
     required String phone,
     required String password,
     required UserRole role,
   }) async {
+    final body = {
+      'name': name,
+      'phone': phone,
+      'password': password,
+      'role': role.value,
+    };
+    
+    if (email != null && email.isNotEmpty) {
+      body['email'] = email;
+    }
+
     final response = await _apiService.post(
       ApiEndpoints.signup,
-      body: {
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        'role': role.value,
-      },
+      body: body,
       auth: false,
     );
 

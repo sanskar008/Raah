@@ -19,10 +19,18 @@ const generateToken = (userId) => {
  * - Returns the user object + JWT.
  */
 const signup = async ({ name, email, phone, password, role }) => {
-  // Check if user already exists
-  const existingUser = await User.findOne({ email });
+  // Check if user already exists by phone (phone is now unique)
+  const existingUser = await User.findOne({ phone });
   if (existingUser) {
-    throw new ApiError(409, 'An account with this email already exists.');
+    throw new ApiError(409, 'An account with this phone number already exists.');
+  }
+
+  // Check email if provided
+  if (email) {
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      throw new ApiError(409, 'An account with this email already exists.');
+    }
   }
 
   // Validate role
@@ -65,4 +73,56 @@ const login = async ({ email, password }) => {
   return { user: userObj, token };
 };
 
-module.exports = { signup, login };
+/**
+ * Send OTP to phone number (demo mode - always returns success)
+ * In production, this would send SMS via Twilio, AWS SNS, etc.
+ */
+const sendOTP = async ({ phone }) => {
+  // Validate phone format
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, 'Phone number must be exactly 10 digits.');
+  }
+
+  // Demo mode: Always return success
+  // In production, you would:
+  // 1. Generate a 6-digit OTP
+  // 2. Store it in Redis/cache with phone number and expiry (5 minutes)
+  // 3. Send SMS via Twilio/AWS SNS/etc.
+  // 4. Return success
+
+  return { message: 'OTP sent successfully', phone };
+};
+
+/**
+ * Verify OTP and login user
+ * - Finds user by phone number
+ * - Verifies OTP (demo: accepts 123456)
+ * - Returns JWT token
+ */
+const verifyOTP = async ({ phone, otp }) => {
+  // Validate phone format
+  if (!/^\d{10}$/.test(phone)) {
+    throw new ApiError(400, 'Phone number must be exactly 10 digits.');
+  }
+
+  // Demo OTP: Accept 123456 for any phone number
+  const DEMO_OTP = '123456';
+  if (otp !== DEMO_OTP) {
+    throw new ApiError(401, 'Invalid OTP. Use 123456 for demo.');
+  }
+
+  // Find user by phone number
+  const user = await User.findOne({ phone });
+  if (!user) {
+    throw new ApiError(404, 'User not found. Please sign up first.');
+  }
+
+  const userObj = user.toObject();
+  delete userObj.password;
+
+  const token = generateToken(user._id);
+
+  return { user: userObj, token };
+};
+
+module.exports = { signup, login, sendOTP, verifyOTP };

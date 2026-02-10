@@ -2,14 +2,14 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 const validate = require('../middlewares/validate');
 const authenticate = require('../middlewares/auth');
-const { signup, login, getMe } = require('../controllers/auth.controller');
+const { signup, login, sendOTP, verifyOTP, getMe } = require('../controllers/auth.controller');
 
 const router = Router();
 
 /* ── Validation chains ───────────────────────────── */
 const signupValidation = [
   body('name').trim().notEmpty().withMessage('Name is required.'),
-  body('email').isEmail().withMessage('A valid email is required.'),
+  body('email').optional().isEmail().withMessage('A valid email is required.'),
   body('phone')
     .trim()
     .matches(/^\d{10}$/)
@@ -26,6 +26,26 @@ const signupValidation = [
 const loginValidation = [
   body('email').isEmail().withMessage('A valid email is required.'),
   body('password').notEmpty().withMessage('Password is required.'),
+];
+
+const sendOTPValidation = [
+  body('phone')
+    .trim()
+    .matches(/^\d{10}$/)
+    .withMessage('Phone must be exactly 10 digits.'),
+];
+
+const verifyOTPValidation = [
+  body('phone')
+    .trim()
+    .matches(/^\d{10}$/)
+    .withMessage('Phone must be exactly 10 digits.'),
+  body('otp')
+    .trim()
+    .notEmpty()
+    .withMessage('OTP is required.')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits.'),
 ];
 
 /* ── Routes ──────────────────────────────────────── */
@@ -112,6 +132,64 @@ router.post('/signup', signupValidation, validate, signup);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/login', loginValidation, validate, login);
+
+/**
+ * @swagger
+ * /auth/send-otp:
+ *   post:
+ *     summary: Send OTP to phone number (demo mode)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 example: "9876543210"
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Validation error
+ */
+router.post('/send-otp', sendOTPValidation, validate, sendOTP);
+
+/**
+ * @swagger
+ * /auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP and login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *               - otp
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 example: "9876543210"
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified, login successful
+ *       401:
+ *         description: Invalid OTP
+ *       404:
+ *         description: User not found
+ */
+router.post('/verify-otp', verifyOTPValidation, validate, verifyOTP);
 
 /**
  * @swagger
