@@ -63,16 +63,14 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/logo.png
 
 # App icon configuration
-# Before running flutter_launcher_icons, convert the SVG files to PNG:
-# 1. Convert app_icon.svg to app_icon.png (1024x1024)
-# 2. Convert app_icon_foreground.svg to app_icon_foreground.png (1024x1024)
-# Then run: flutter pub run flutter_launcher_icons
+# Using logo.png from assets folder
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icons/app_icon.png"
+  image_path: "assets/logo.png"
   adaptive_icon_background: "#1A3C5E"  # Primary navy blue color (matches login page)
-  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+  adaptive_icon_foreground: "assets/logo.png"
   remove_alpha_ios: true

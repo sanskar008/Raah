@@ -27,4 +27,15 @@ class ApiEndpoints {
   // ── Wallet (Broker) ──
   static const String wallet = '$baseUrl/wallet';
   static const String walletWithdraw = '$baseUrl/wallet/withdraw';
+
+  // ── Coins (Customer) ──
+  static const String coinPacks = '$baseUrl/coins/packs';
+  static const String purchaseCoinPack = '$baseUrl/coins/purchase';
+  static const String unlockProperty = '$baseUrl/coins/unlock-property';
+  static const String customerWallet = '$baseUrl/coins/wallet';
+
+  // ── Rental (Owner) ──
+  static const String rentalPlans = '$baseUrl/rental/plans';
+  static const String purchaseRentalPeriod = '$baseUrl/rental/purchase';
+  static const String myRentals = '$baseUrl/rental/my';
 }

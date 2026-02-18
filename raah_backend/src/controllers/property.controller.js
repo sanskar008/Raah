@@ -38,10 +38,12 @@ const getMyProperties = asyncHandler(async (req, res) => {
 /**
  * @route   GET /api/properties/:id
  * @desc    Get a single property by ID
- * @access  Public
+ * @access  Public (but unlock status depends on user)
  */
 const getPropertyById = asyncHandler(async (req, res) => {
-  const property = await propertyService.getPropertyById(req.params.id);
+  const userId = req.user?._id?.toString() || null;
+  const userRole = req.user?.role || null;
+  const property = await propertyService.getPropertyById(req.params.id, userId, userRole);
 
   res.status(200).json(new ApiResponse(200, 'Property details fetched.', { property }));
 });

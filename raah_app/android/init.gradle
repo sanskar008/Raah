@@ -1,0 +1,32 @@
+// Gradle init script to redirect Maven Central URLs
+// This intercepts repository URLs and redirects repo.maven.apache.org to repo1.maven.org
+
+allprojects {
+    repositories {
+        all { repo ->
+            if (repo instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.contains("repo.maven.apache.org")) {
+                    def newUrl = url.replace("repo.maven.apache.org", "repo1.maven.org")
+                    repo.url = new URI(newUrl)
+                    println("Redirected Maven repository: ${url} -> ${newUrl}")
+                }
+            }
+        }
+    }
+}
+
+settingsEvaluated { settings ->
+    settings.pluginManagement.repositories {
+        all { repo ->
+            if (repo instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository) {
+                def url = repo.url.toString()
+                if (url.contains("repo.maven.apache.org")) {
+                    def newUrl = url.replace("repo.maven.apache.org", "repo1.maven.org")
+                    repo.url = new URI(newUrl)
+                    println("Redirected plugin repository: ${url} -> ${newUrl}")
+                }
+            }
+        }
+    }
+}

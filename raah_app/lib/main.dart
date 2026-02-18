@@ -9,10 +9,16 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/property_repository.dart';
 import 'data/repositories/appointment_repository.dart';
 import 'data/repositories/wallet_repository.dart';
+import 'data/repositories/coin_repository.dart';
+import 'data/repositories/rental_repository.dart';
 import 'presentation/auth/viewmodels/auth_viewmodel.dart';
 import 'presentation/customer/viewmodels/home_viewmodel.dart';
+import 'presentation/customer/viewmodels/property_detail_viewmodel.dart';
+import 'presentation/customer/viewmodels/coin_wallet_viewmodel.dart';
+import 'presentation/customer/viewmodels/coin_store_viewmodel.dart';
 import 'presentation/broker/viewmodels/broker_viewmodel.dart';
 import 'presentation/owner/viewmodels/owner_viewmodel.dart';
+import 'presentation/owner/viewmodels/rental_viewmodel.dart';
 
 /// App entry point.
 /// Sets up dependency injection via Provider and initializes auth state.
@@ -45,6 +51,8 @@ void main() async {
   final propertyRepository = PropertyRepository(apiService: apiService);
   final appointmentRepository = AppointmentRepository(apiService: apiService);
   final walletRepository = WalletRepository(apiService: apiService);
+  final coinRepository = CoinRepository(apiService: apiService);
+  final rentalRepository = RentalRepository(apiService: apiService);
 
   // ── Create ViewModels ──
   final authViewModel = AuthViewModel(authRepository: authRepository);
@@ -62,9 +70,7 @@ void main() async {
 
         // Customer home feed ViewModel
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(
-            propertyRepository: propertyRepository,
-          ),
+          create: (_) => HomeViewModel(propertyRepository: propertyRepository),
         ),
 
         // Broker ViewModel
@@ -81,6 +87,28 @@ void main() async {
             propertyRepository: propertyRepository,
             appointmentRepository: appointmentRepository,
           ),
+        ),
+
+        // Customer Coin ViewModels
+        ChangeNotifierProvider(
+          create: (_) => CoinWalletViewModel(coinRepository: coinRepository),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CoinStoreViewModel(coinRepository: coinRepository),
+        ),
+
+        // Property Detail ViewModel (with coin repository for customers)
+        ChangeNotifierProvider(
+          create: (_) => PropertyDetailViewModel(
+            propertyRepository: propertyRepository,
+            appointmentRepository: appointmentRepository,
+            coinRepository: coinRepository,
+          ),
+        ),
+
+        // Owner Rental ViewModel
+        ChangeNotifierProvider(
+          create: (_) => RentalViewModel(rentalRepository: rentalRepository),
         ),
       ],
       child: const RaahApp(),

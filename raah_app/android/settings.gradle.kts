@@ -12,6 +12,16 @@ pluginManagement {
 
     repositories {
         google()
+        // Use explicit Maven Central URL (repo1.maven.org is the official URL)
+        maven { 
+            url = uri("https://repo1.maven.org/maven2/")
+            name = "Maven Central"
+        }
+        // Add Aliyun mirror as fallback (works when Maven Central is unreachable)
+        maven { 
+            url = uri("https://maven.aliyun.com/repository/public/")
+            name = "Aliyun Maven"
+        }
         mavenCentral()
         gradlePluginPortal()
     }

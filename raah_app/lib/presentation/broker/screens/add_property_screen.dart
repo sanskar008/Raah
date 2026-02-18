@@ -509,7 +509,28 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Future<void> _pickImages() async {
     try {
-      final List<XFile> pickedFiles = await _imagePicker.pickMultiImage();
+      final authVM = context.read<AuthViewModel>();
+      final user = authVM.user;
+      final isOwner = user?.role == UserRole.owner;
+
+      // For owners, only allow camera (live capture)
+      // For brokers, allow gallery selection
+      List<XFile> pickedFiles = [];
+      
+      if (isOwner) {
+        // Owners can only use camera - pick one at a time
+        final XFile? pickedFile = await _imagePicker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+        );
+        
+        if (pickedFile != null) {
+          pickedFiles = [pickedFile];
+        }
+      } else {
+        // Brokers can pick from gallery
+        pickedFiles = await _imagePicker.pickMultiImage();
+      }
       
       if (pickedFiles.isEmpty) return;
 
@@ -618,44 +639,67 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         
         // Upload button
         if (_selectedImages.length < 5)
-          GestureDetector(
-            onTap: _pickImages,
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: AppColors.divider,
-                  style: BorderStyle.solid,
-                  width: 2,
+          Builder(
+            builder: (context) {
+              final authVM = context.read<AuthViewModel>();
+              final user = authVM.user;
+              final isOwner = user?.role == UserRole.owner;
+              
+              return GestureDetector(
+                onTap: _pickImages,
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppColors.divider,
+                      style: BorderStyle.solid,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isOwner ? Icons.camera_alt_outlined : Icons.add_photo_alternate_outlined,
+                          size: 36,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          isOwner
+                              ? (_selectedImages.isEmpty
+                                  ? 'Tap to capture photo'
+                                  : 'Capture more photos')
+                              : (_selectedImages.isEmpty
+                                  ? 'Tap to add images'
+                                  : 'Add more images'),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        if (isOwner)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Camera only',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textHint,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        Text(
+                          '${_selectedImages.length}/5 images',
+                          style: AppTextStyles.caption,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(AppConstants.radiusMd),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.add_photo_alternate_outlined,
-                      size: 36,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _selectedImages.isEmpty
-                          ? 'Tap to add images'
-                          : 'Add more images',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    Text(
-                      '${_selectedImages.length}/5 images',
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+              );
+            },
           ),
       ],
     );

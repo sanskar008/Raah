@@ -1,6 +1,7 @@
 const Property = require('../models/Property');
 const User = require('../models/User');
 const WalletTransaction = require('../models/WalletTransaction');
+const UnlockedProperty = require('../models/UnlockedProperty');
 const ApiError = require('../utils/ApiError');
 const { ROLES, WALLET_TX_TYPE } = require('../utils/constants');
 
@@ -29,6 +30,24 @@ const createProperty = async (data, currentUser) => {
     }
   } else {
     throw new ApiError(403, 'Customers cannot create property listings.');
+  }
+
+  // Check if this is owner's first property (for free 7 days)
+  if (currentUser.role === ROLES.OWNER) {
+    const ownerPropertiesCount = await Property.countDocuments({
+      ownerId: currentUser._id,
+    });
+    propertyData.isFirstProperty = ownerPropertiesCount === 0;
+    
+    // If first property, set initial 7-day free period
+    if (propertyData.isFirstProperty) {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 7);
+      propertyData.rentalPeriodDays = 7;
+      propertyData.rentalPeriodStart = startDate;
+      propertyData.rentalPeriodEnd = endDate;
+    }
   }
 
   const property = await Property.create(propertyData);
@@ -120,8 +139,9 @@ const listProperties = async (query) => {
 
 /**
  * Get a single property by ID with populated owner/broker info.
+ * For customers, check if property is unlocked.
  */
-const getPropertyById = async (propertyId) => {
+const getPropertyById = async (propertyId, userId = null, userRole = null) => {
   const property = await Property.findById(propertyId)
     .populate('ownerId', 'name email phone')
     .populate('brokerId', 'name email phone')
@@ -131,7 +151,23 @@ const getPropertyById = async (propertyId) => {
     throw new ApiError(404, 'Property not found.');
   }
 
-  return property;
+  // For customers, check if property is unlocked
+  let isUnlocked = false;
+  if (userRole === ROLES.CUSTOMER && userId) {
+    const unlock = await UnlockedProperty.findOne({
+      customerId: userId,
+      propertyId: propertyId,
+    });
+    isUnlocked = !!unlock;
+  } else if (userRole !== ROLES.CUSTOMER) {
+    // Owners, brokers, and unauthenticated users can see all details
+    isUnlocked = true;
+  }
+
+  return {
+    ...property,
+    isUnlocked,
+  };
 };
 
 /**

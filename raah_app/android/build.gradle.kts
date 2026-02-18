@@ -1,6 +1,16 @@
 allprojects {
     repositories {
         google()
+        // Use explicit Maven Central URL (repo1.maven.org is the official URL)
+        maven { 
+            url = uri("https://repo1.maven.org/maven2/")
+            name = "Maven Central"
+        }
+        // Add Aliyun mirror as fallback (faster in some regions)
+        maven { 
+            url = uri("https://maven.aliyun.com/repository/public/")
+            name = "Aliyun Maven"
+        }
         mavenCentral()
     }
 }

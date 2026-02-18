@@ -47,6 +47,24 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    /**
+     * Coins balance for customers to unlock property details.
+     * First 3 properties are free, then 2 credits per property.
+     */
+    coins: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    /**
+     * Track how many free property views the customer has used.
+     * Resets or increments based on business logic.
+     */
+    freePropertyViewsUsed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );

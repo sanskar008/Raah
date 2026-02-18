@@ -14,6 +14,8 @@ const authRoutes = require('./routes/auth.routes');
 const propertyRoutes = require('./routes/property.routes');
 const appointmentRoutes = require('./routes/appointment.routes');
 const walletRoutes = require('./routes/wallet.routes');
+const coinRoutes = require('./routes/coin.routes');
+const rentalRoutes = require('./routes/rental.routes');
 
 const app = express();
 
@@ -63,6 +65,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/coins', coinRoutes);
+app.use('/api/rental', rentalRoutes);
 
 /* ── 404 handler for unknown routes ──────────────── */
 app.all('*', (req, _res, next) => {

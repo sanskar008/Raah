@@ -12,6 +12,7 @@ import '../../broker/screens/add_property_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../viewmodels/owner_viewmodel.dart';
 import 'owner_appointments_screen.dart';
+import 'rental_payment_screen.dart';
 
 /// Owner dashboard — owned properties + appointment summary.
 /// Includes drawer for full navigation.
@@ -29,7 +30,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<AuthViewModel>().user;
       final ownerVM = context.read<OwnerViewModel>();
       ownerVM.loadMyProperties();
       ownerVM.loadAppointments();
@@ -316,33 +316,55 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                                 ),
                               ],
                             ),
-                            trailing: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: property.isAvailable
-                                    ? AppColors.success
-                                        .withValues(alpha: 0.1)
-                                    : AppColors.error
-                                        .withValues(alpha: 0.1),
-                                borderRadius:
-                                    BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                property.isAvailable
-                                    ? 'Active'
-                                    : 'Inactive',
-                                style:
-                                    AppTextStyles.caption.copyWith(
-                                  color: property.isAvailable
-                                      ? AppColors.success
-                                      : AppColors.error,
-                                  fontWeight: FontWeight.w600,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.calendar_today_outlined,
+                                    size: 20,
+                                  ),
+                                  tooltip: 'Purchase Rental Period',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => RentalPaymentScreen(
+                                          property: property,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
+                                Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: property.isAvailable
+                                        ? AppColors.success
+                                            .withValues(alpha: 0.1)
+                                        : AppColors.error
+                                            .withValues(alpha: 0.1),
+                                    borderRadius:
+                                        BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    property.isAvailable
+                                        ? 'Active'
+                                        : 'Inactive',
+                                    style:
+                                        AppTextStyles.caption.copyWith(
+                                      color: property.isAvailable
+                                          ? AppColors.success
+                                          : AppColors.error,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

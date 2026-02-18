@@ -1,21 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../data/models/property_model.dart';
+import '../../../domain/enums/user_role.dart';
+import '../../auth/viewmodels/auth_viewmodel.dart';
+import '../viewmodels/property_detail_viewmodel.dart';
+import '../viewmodels/coin_wallet_viewmodel.dart';
 import '../widgets/image_carousel.dart';
 import 'appointment_booking_screen.dart';
+import 'coin_wallet_screen.dart';
 
 /// Property detail screen — full gallery, rent info, amenities, owner info.
 /// Premium layout with elegant typography and spacing.
-class PropertyDetailScreen extends StatelessWidget {
+class PropertyDetailScreen extends StatefulWidget {
   final PropertyModel property;
 
   const PropertyDetailScreen({super.key, required this.property});
 
   @override
+  State<PropertyDetailScreen> createState() => _PropertyDetailScreenState();
+}
+
+class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
+  late PropertyDetailViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = context.read<PropertyDetailViewModel>();
+    _viewModel.setProperty(widget.property);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final authVM = context.watch<AuthViewModel>();
+    final isCustomer = authVM.userRole == UserRole.customer;
+    final propertyVM = context.watch<PropertyDetailViewModel>();
+    final property = propertyVM.property ?? widget.property;
+    final isUnlocked = property.isUnlocked ?? false;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -27,9 +53,45 @@ class PropertyDetailScreen extends StatelessWidget {
             backgroundColor: AppColors.surface,
             leading: _buildBackButton(context),
             flexibleSpace: FlexibleSpaceBar(
-              background: ImageCarousel(
-                imageUrls: property.imageUrls,
-                height: AppConstants.propertyDetailImageHeight,
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ImageCarousel(
+                    imageUrls: property.imageUrls,
+                    height: AppConstants.propertyDetailImageHeight,
+                  ),
+                  // ── Lock overlay for customers ──
+                  if (isCustomer && !isUnlocked)
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              size: 64,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(height: AppConstants.spacingMd),
+                            Text(
+                              'Unlock to view details',
+                              style: AppTextStyles.h4.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: AppConstants.spacingSm),
+                            Text(
+                              '2 coins required',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -165,13 +227,16 @@ class PropertyDetailScreen extends StatelessWidget {
                       children: [
                         Text('Description', style: AppTextStyles.h4),
                         const SizedBox(height: AppConstants.spacingMd),
-                        Text(
-                          property.description,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                            height: 1.6,
+                        if (isCustomer && !isUnlocked)
+                          _buildLockedContent()
+                        else
+                          Text(
+                            property.description,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.6,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
@@ -188,13 +253,16 @@ class PropertyDetailScreen extends StatelessWidget {
                         children: [
                           Text('Amenities', style: AppTextStyles.h4),
                           const SizedBox(height: AppConstants.spacingMd),
-                          Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
-                            children: property.amenities.map((amenity) {
-                              return _amenityChip(amenity);
-                            }).toList(),
-                          ),
+                          if (isCustomer && !isUnlocked)
+                            _buildLockedContent()
+                          else
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 10,
+                              children: property.amenities.map((amenity) {
+                                return _amenityChip(amenity);
+                              }).toList(),
+                            ),
                         ],
                       ),
                     ),
@@ -314,33 +382,63 @@ class PropertyDetailScreen extends StatelessWidget {
                 ),
               ),
 
-              // Book button
-              SizedBox(
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AppointmentBookingScreen(
-                          property: property,
-                        ),
+              // Unlock or Book button
+              if (isCustomer && !isUnlocked)
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: propertyVM.isUnlocking
+                        ? null
+                        : () => _handleUnlock(context, propertyVM),
+                    icon: Icon(
+                      propertyVM.isUnlocking
+                          ? null
+                          : Icons.lock_open_outlined,
+                      size: 18,
+                    ),
+                    label: Text(
+                      propertyVM.isUnlocking
+                          ? 'Unlocking...'
+                          : 'Unlock (2 coins)',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusMd),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.calendar_today_rounded, size: 18),
-                  label: const Text('Book Visit'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: AppColors.textOnPrimary,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusMd),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AppointmentBookingScreen(
+                            property: property,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_today_rounded, size: 18),
+                    label: const Text('Book Visit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: AppColors.textOnPrimary,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusMd),
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -459,5 +557,99 @@ class PropertyDetailScreen extends StatelessWidget {
       return Icons.child_care;
     }
     return Icons.check_circle_outline;
+  }
+
+  Widget _buildLockedContent() {
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.spacingLg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.lock_outline,
+            color: AppColors.textHint,
+            size: 24,
+          ),
+          const SizedBox(width: AppConstants.spacingMd),
+          Expanded(
+            child: Text(
+              'Unlock property to view this content',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleUnlock(
+    BuildContext context,
+    PropertyDetailViewModel propertyVM,
+  ) async {
+    final success = await propertyVM.unlockProperty();
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Property unlocked successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+
+      // Refresh wallet if available
+      try {
+        final walletVM = context.read<CoinWalletViewModel>();
+        walletVM.refreshWallet();
+      } catch (e) {
+        // Wallet VM might not be available
+      }
+    } else {
+      final error = propertyVM.error ?? 'Failed to unlock property';
+      
+      if (error.contains('Insufficient coins')) {
+        // Show dialog to buy coins
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Insufficient Coins'),
+            content: const Text(
+              'You don\'t have enough coins to unlock this property. Would you like to buy more coins?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const CoinWalletScreen(),
+                    ),
+                  );
+                },
+                child: const Text('Buy Coins'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 }

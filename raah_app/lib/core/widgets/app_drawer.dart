@@ -4,8 +4,10 @@ import '../../domain/enums/user_role.dart';
 import '../../presentation/auth/viewmodels/auth_viewmodel.dart';
 import '../../presentation/broker/screens/add_property_screen.dart';
 import '../../presentation/broker/screens/wallet_screen.dart';
+import '../../presentation/customer/screens/coin_wallet_screen.dart';
 import '../../presentation/help/screens/help_support_screen.dart';
 import '../../presentation/owner/screens/owner_appointments_screen.dart';
+import '../../presentation/owner/screens/rental_management_screen.dart';
 import '../../presentation/profile/screens/profile_screen.dart';
 import '../../presentation/settings/screens/settings_screen.dart';
 import '../constants/app_colors.dart';
@@ -56,6 +58,19 @@ class AppDrawer extends StatelessWidget {
                       onTap: () {
                         Navigator.pop(context);
                         // Already on home screen, just close drawer
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: 'My Wallet',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CoinWalletScreen(),
+                          ),
+                        );
                       },
                     ),
                   ],
@@ -126,6 +141,20 @@ class AppDrawer extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) =>
                                 const OwnerAppointmentsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.calendar_today_outlined,
+                      label: 'My Rentals',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const RentalManagementScreen(),
                           ),
                         );
                       },

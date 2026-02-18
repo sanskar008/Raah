@@ -22,6 +22,7 @@ class PropertyModel {
   final double? areaSqFt;
   final bool isAvailable;
   final DateTime? createdAt;
+  final bool? isUnlocked; // Whether customer has unlocked this property
 
   PropertyModel({
     required this.id,
@@ -44,6 +45,7 @@ class PropertyModel {
     this.areaSqFt,
     this.isAvailable = true,
     this.createdAt,
+    this.isUnlocked,
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
@@ -93,6 +95,7 @@ class PropertyModel {
           : json['created_at'] != null
               ? DateTime.parse(json['created_at'])
               : null,
+      isUnlocked: json['isUnlocked'],
     );
   }
 

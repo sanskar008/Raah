@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { body } = require('express-validator');
 const validate = require('../middlewares/validate');
 const authenticate = require('../middlewares/auth');
+const optionalAuthenticate = require('../middlewares/optionalAuth');
 const authorise = require('../middlewares/role');
 const { ROLES } = require('../utils/constants');
 const {
@@ -186,7 +187,8 @@ router.get(
  *       404:
  *         description: Property not found
  */
-router.get('/:id', getPropertyById);
+// Optional auth for getPropertyById - allows checking unlock status for customers
+router.get('/:id', optionalAuthenticate, getPropertyById);
 
 /**
  * @swagger

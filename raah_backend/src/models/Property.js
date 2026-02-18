@@ -66,6 +66,36 @@ const propertySchema = new mongoose.Schema(
       ref: 'User',
       default: null,
     },
+    /**
+     * Rental period in days - how long the property is listed for rent.
+     * Owner pays for rental periods after first 7 days free.
+     */
+    rentalPeriodDays: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    /**
+     * Rental period start date - when the rental period begins.
+     */
+    rentalPeriodStart: {
+      type: Date,
+      default: null,
+    },
+    /**
+     * Rental period end date - when the rental period expires.
+     */
+    rentalPeriodEnd: {
+      type: Date,
+      default: null,
+    },
+    /**
+     * Whether this is the owner's first property (gets 7 days free).
+     */
+    isFirstProperty: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

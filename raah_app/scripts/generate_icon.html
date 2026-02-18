@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App Icon Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #1A3C5E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2a5c8e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>App Icon Generator - Home Emoji 🏠</h1>
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <ol>
+                <li>Click "Generate Main Icon" to create the full icon with navy blue background</li>
+                <li>Click "Generate Foreground Icon" to create the emoji-only version</li>
+                <li>Right-click each canvas and "Save image as..." to download</li>
+                <li>Save as <code>app_icon.png</code> and <code>app_icon_foreground.png</code> in <code>assets/icons/</code></li>
+            </ol>
+        </div>
+        
+        <h2>Main Icon (with background)</h2>
+        <canvas id="mainIcon" width="1024" height="1024"></canvas>
+        <div style="text-align: center;">
+            <button onclick="generateMainIcon()">Generate Main Icon</button>
+            <button onclick="downloadMainIcon()">Download Main Icon</button>
+        </div>
+        
+        <h2>Foreground Icon (emoji only)</h2>
+        <canvas id="foregroundIcon" width="1024" height="1024"></canvas>
+        <div style="text-align: center;">
+            <button onclick="generateForegroundIcon()">Generate Foreground Icon</button>
+            <button onclick="downloadForegroundIcon()">Download Foreground Icon</button>
+        </div>
+    </div>
+
+    <script>
+        const size = 1024;
+        const backgroundColor = '#1A3C5E';
+        const emojiSize = 600;
+        
+        function generateMainIcon() {
+            const canvas = document.getElementById('mainIcon');
+            const ctx = canvas.getContext('2d');
+            
+            // Draw rounded rectangle background
+            ctx.fillStyle = backgroundColor;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, 128);
+            ctx.fill();
+            
+            // Draw home emoji
+            ctx.font = `${emojiSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏠', size / 2, size / 2);
+        }
+        
+        function generateForegroundIcon() {
+            const canvas = document.getElementById('foregroundIcon');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas (transparent background)
+            ctx.clearRect(0, 0, size, size);
+            
+            // Draw white home emoji
+            ctx.font = `${emojiSize}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillText('🏠', size / 2, size / 2);
+        }
+        
+        function downloadMainIcon() {
+            const canvas = document.getElementById('mainIcon');
+            const link = document.createElement('a');
+            link.download = 'app_icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        function downloadForegroundIcon() {
+            const canvas = document.getElementById('foregroundIcon');
+            const link = document.createElement('a');
+            link.download = 'app_icon_foreground.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Generate icons on load
+        window.onload = function() {
+            generateMainIcon();
+            generateForegroundIcon();
+        };
+    </script>
+</body>
+</html>

@@ -29,7 +29,6 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<AuthViewModel>().user;
       final brokerVM = context.read<BrokerViewModel>();
       brokerVM.loadMyProperties();
       brokerVM.loadWallet();

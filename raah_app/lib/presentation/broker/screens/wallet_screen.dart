@@ -21,7 +21,6 @@ class _WalletScreenState extends State<WalletScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = context.read<AuthViewModel>().user;
       context.read<BrokerViewModel>().loadWallet();
     });
   }

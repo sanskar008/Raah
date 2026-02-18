@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -10,7 +9,6 @@ import '../../../core/widgets/custom_button.dart';
 import '../../../data/models/property_model.dart';
 import '../../../data/repositories/appointment_repository.dart';
 import '../../../data/repositories/property_repository.dart';
-import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../viewmodels/property_detail_viewmodel.dart';
 
 /// Appointment booking screen — select date, time, confirm visit.
