@@ -8,14 +8,18 @@ import '../../../data/models/property_model.dart';
 
 /// Property card — Airbnb-inspired design with image carousel,
 /// rent, location, and owner info.
+/// When [creditsToUnlock] is set (e.g. 2), shows "X credits to unlock full details" for sample unlock in feed.
 class PropertyCard extends StatefulWidget {
   final PropertyModel property;
   final VoidCallback? onTap;
+  /// When non-null (e.g. 2), shows hint "X credits to unlock full details" — used in customer feed.
+  final int? creditsToUnlock;
 
   const PropertyCard({
     super.key,
     required this.property,
     this.onTap,
+    this.creditsToUnlock,
   });
 
   @override
@@ -109,7 +113,7 @@ class _PropertyCardState extends State<PropertyCard> {
 
                   const SizedBox(height: 10),
 
-                  // Rent + Owner
+                  // Rent + credits hint or Owner
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -119,50 +123,80 @@ class _PropertyCardState extends State<PropertyCard> {
                         style: AppTextStyles.priceSmall,
                       ),
 
-                      // Owner info
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: AppColors.primaryLight,
-                            child: Text(
-                              property.ownerName[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: AppColors.textOnPrimary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                      // Credits to unlock hint (customer feed) or Owner info
+                      if (widget.creditsToUnlock != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            property.ownerName,
-                            style: AppTextStyles.bodySmall.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          if (property.isBrokerListed) ...[
-                            const SizedBox(width: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.lock_open_outlined,
+                                size: 14,
+                                color: AppColors.primary,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppColors.accentSoft,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'Broker',
+                              const SizedBox(width: 4),
+                              Text(
+                                '${widget.creditsToUnlock} credits to unlock full details',
                                 style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.accent,
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: AppColors.primaryLight,
+                              child: Text(
+                                property.ownerName[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: AppColors.textOnPrimary,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 6),
+                            Text(
+                              property.ownerName,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (property.isBrokerListed) ...[
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentSoft,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Broker',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.accent,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
+                        ),
                     ],
                   ),
 

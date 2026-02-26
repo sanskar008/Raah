@@ -32,6 +32,17 @@ const createProperty = async (data, currentUser) => {
     throw new ApiError(403, 'Customers cannot create property listings.');
   }
 
+  // Room owner must upload at least one image or video of the room
+  if (currentUser.role === ROLES.OWNER) {
+    const images = propertyData.images;
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      throw new ApiError(
+        400,
+        'Room owner must upload at least one photo or video of the room to list the property.'
+      );
+    }
+  }
+
   // Check if this is owner's first property (for free 7 days)
   if (currentUser.role === ROLES.OWNER) {
     const ownerPropertiesCount = await Property.countDocuments({

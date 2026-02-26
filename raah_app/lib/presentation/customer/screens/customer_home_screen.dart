@@ -7,6 +7,7 @@ import '../../../core/widgets/app_drawer.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../data/models/property_model.dart';
+import '../../../domain/enums/user_role.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../viewmodels/home_viewmodel.dart';
@@ -280,9 +281,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
         itemCount: homeVM.properties.length,
         itemBuilder: (context, index) {
           final property = homeVM.properties[index];
+          final authVM = context.read<AuthViewModel>();
           return PropertyCard(
             property: property,
             onTap: () => _openPropertyDetail(property),
+            creditsToUnlock: authVM.userRole == UserRole.customer ? 2 : null,
           );
         },
       ),

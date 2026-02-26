@@ -11,6 +11,7 @@ import '../viewmodels/property_detail_viewmodel.dart';
 import '../viewmodels/coin_wallet_viewmodel.dart';
 import '../widgets/image_carousel.dart';
 import 'appointment_booking_screen.dart';
+import 'chat_conversation_screen.dart';
 import 'coin_wallet_screen.dart';
 
 /// Property detail screen — full gallery, rent info, amenities, owner info.
@@ -269,7 +270,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                   const SizedBox(height: AppConstants.spacingSm),
 
-                  // ── Owner / Broker Info ──
+                  // ── Owner / Inquiry & Chat ──
                   Container(
                     padding: const EdgeInsets.all(AppConstants.spacingLg),
                     color: AppColors.surface,
@@ -299,38 +300,41 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                             const SizedBox(width: AppConstants.spacingMd),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    property.ownerName,
-                                    style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    property.ownerPhone,
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                ],
+                              child: Text(
+                                property.ownerName,
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                            // Call button
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(
-                                    AppConstants.radiusMd),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.phone_outlined,
-                                  color: AppColors.primary,
+                          ],
+                        ),
+                        const SizedBox(height: AppConstants.spacingMd),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _openChatWithOwner(context, property),
+                                icon: const Icon(Icons.question_answer_outlined, size: 18),
+                                label: const Text('Inquiry'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.primary,
+                                  side: const BorderSide(color: AppColors.primary),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
                                 ),
-                                onPressed: () {
-                                  // TODO: Launch phone call
-                                },
+                              ),
+                            ),
+                            const SizedBox(width: AppConstants.spacingMd),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => _openChatWithOwner(context, property),
+                                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                                label: const Text('Chat'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
                               ),
                             ),
                           ],
@@ -651,5 +655,17 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         );
       }
     }
+  }
+
+  void _openChatWithOwner(BuildContext context, PropertyModel property) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatConversationScreen(
+          property: property,
+          ownerName: property.ownerName,
+        ),
+      ),
+    );
   }
 }

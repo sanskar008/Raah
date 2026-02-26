@@ -38,4 +38,10 @@ class ApiEndpoints {
   static const String rentalPlans = '$baseUrl/rental/plans';
   static const String purchaseRentalPeriod = '$baseUrl/rental/purchase';
   static const String myRentals = '$baseUrl/rental/my';
+
+  // ── Chat ──
+  static const String chatConversation = '$baseUrl/chat/conversation';
+  static const String chatConversations = '$baseUrl/chat/conversations';
+  static String chatMessages(String conversationId) =>
+      '$baseUrl/chat/conversations/$conversationId/messages';
 }

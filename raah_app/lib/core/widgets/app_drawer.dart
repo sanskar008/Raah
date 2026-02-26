@@ -4,6 +4,7 @@ import '../../domain/enums/user_role.dart';
 import '../../presentation/auth/viewmodels/auth_viewmodel.dart';
 import '../../presentation/broker/screens/add_property_screen.dart';
 import '../../presentation/broker/screens/wallet_screen.dart';
+import '../../presentation/customer/screens/chat_list_screen.dart';
 import '../../presentation/customer/screens/coin_wallet_screen.dart';
 import '../../presentation/help/screens/help_support_screen.dart';
 import '../../presentation/owner/screens/owner_appointments_screen.dart';
@@ -69,6 +70,19 @@ class AppDrawer extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) => const CoinWalletScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: 'Chats',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChatListScreen(),
                           ),
                         );
                       },
@@ -155,6 +169,19 @@ class AppDrawer extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) =>
                                 const RentalManagementScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      label: 'Chats',
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ChatListScreen(),
                           ),
                         );
                       },

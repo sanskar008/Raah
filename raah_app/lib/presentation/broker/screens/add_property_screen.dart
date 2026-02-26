@@ -75,6 +75,25 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   Future<void> _submitProperty() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final authVM = context.read<AuthViewModel>();
+    final isOwner = authVM.user?.role == UserRole.owner;
+
+    // Room owner must upload at least one photo or video of the room
+    if (isOwner && _selectedImages.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please add at least one photo or video of the room. Room owners must upload live-captured images.',
+            ),
+            backgroundColor: AppColors.warning,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     // Check Cloudinary configuration
     if (!ImageUploadService.isConfigured()) {
       if (mounted) {
@@ -127,7 +146,6 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
       setState(() => _isUploadingImages = false);
 
-      final authVM = context.read<AuthViewModel>();
       final user = authVM.user;
       if (user == null) {
         throw Exception('User not logged in');
@@ -494,7 +512,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               // ── Submit ──
               CustomButton(
                 text: _isUploadingImages ? 'Uploading Images...' : 'Submit Property',
-                onPressed: (_isSubmitting || _isUploadingImages) ? null : _submitProperty,
+                onPressed: (_isSubmitting || _isUploadingImages) ? null : _canSubmitProperty() ? _submitProperty : null,
                 isLoading: _isSubmitting || _isUploadingImages,
                 icon: Icons.upload_rounded,
               ),
@@ -571,6 +589,15 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+
+  /// Owner must add at least one photo/video; broker can submit without.
+  bool _canSubmitProperty() {
+    final authVM = context.read<AuthViewModel>();
+    if (authVM.user?.role == UserRole.owner) {
+      return _selectedImages.isNotEmpty;
+    }
+    return true;
   }
 
   Widget _buildImageUploader() {

@@ -11,11 +11,13 @@ import 'data/repositories/appointment_repository.dart';
 import 'data/repositories/wallet_repository.dart';
 import 'data/repositories/coin_repository.dart';
 import 'data/repositories/rental_repository.dart';
+import 'data/repositories/chat_repository.dart';
 import 'presentation/auth/viewmodels/auth_viewmodel.dart';
 import 'presentation/customer/viewmodels/home_viewmodel.dart';
 import 'presentation/customer/viewmodels/property_detail_viewmodel.dart';
 import 'presentation/customer/viewmodels/coin_wallet_viewmodel.dart';
 import 'presentation/customer/viewmodels/coin_store_viewmodel.dart';
+import 'presentation/customer/viewmodels/chat_viewmodel.dart';
 import 'presentation/broker/viewmodels/broker_viewmodel.dart';
 import 'presentation/owner/viewmodels/owner_viewmodel.dart';
 import 'presentation/owner/viewmodels/rental_viewmodel.dart';
@@ -53,6 +55,7 @@ void main() async {
   final walletRepository = WalletRepository(apiService: apiService);
   final coinRepository = CoinRepository(apiService: apiService);
   final rentalRepository = RentalRepository(apiService: apiService);
+  final chatRepository = ChatRepository(apiService: apiService);
 
   // ── Create ViewModels ──
   final authViewModel = AuthViewModel(authRepository: authRepository);
@@ -109,6 +112,11 @@ void main() async {
         // Owner Rental ViewModel
         ChangeNotifierProvider(
           create: (_) => RentalViewModel(rentalRepository: rentalRepository),
+        ),
+
+        // Chat ViewModel
+        ChangeNotifierProvider(
+          create: (_) => ChatViewModel(chatRepository: chatRepository),
         ),
       ],
       child: const RaahApp(),
