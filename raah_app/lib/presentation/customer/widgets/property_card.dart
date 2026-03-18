@@ -117,11 +117,33 @@ class _PropertyCardState extends State<PropertyCard> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Rent
-                      Text(
-                        property.rent.toRent,
-                        style: AppTextStyles.priceSmall,
-                      ),
+                      // Rent (with flatmate split if applicable)
+                      if (property.existingFlatmates > 0)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              property.rent.toRent,
+                              style: AppTextStyles.priceSmall.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: AppColors.textHint,
+                                color: AppColors.textHint,
+                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              (property.rent / (property.existingFlatmates + 1)).toRent,
+                              style: AppTextStyles.priceSmall.copyWith(
+                                color: AppColors.success,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          property.rent.toRent,
+                          style: AppTextStyles.priceSmall,
+                        ),
 
                       // Credits to unlock hint (customer feed) or Owner info
                       if (widget.creditsToUnlock != null)

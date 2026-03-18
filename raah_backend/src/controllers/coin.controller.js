@@ -52,9 +52,20 @@ const getCustomerWallet = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, 'Wallet fetched.', wallet));
 });
 
+/**
+ * @route   GET /api/coins/history
+ * @desc    Get customer's full coin transaction history
+ * @access  Private – Customer
+ */
+const getCoinHistory = asyncHandler(async (req, res) => {
+  const result = await coinService.getCoinHistory(req.user._id);
+  res.status(200).json(new ApiResponse(200, 'Coin history fetched.', result));
+});
+
 module.exports = {
   getCoinPacks,
   purchaseCoinPack,
   unlockProperty,
   getCustomerWallet,
+  getCoinHistory,
 };

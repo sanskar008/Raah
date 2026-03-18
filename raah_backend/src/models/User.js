@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { ROLES } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema(
@@ -65,6 +66,40 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    /**
+     * Unique referral code for this user — generated on creation.
+     * Other users enter this during signup to earn the referrer 5 coins.
+     */
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    /**
+     * The user who referred this user (via referral code at signup).
+     */
+    referredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
+    /**
+     * Count of users who successfully signed up using this user's referral code.
+     */
+    referredCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    /**
+     * User's last known location (set when they share location from app).
+     */
+    location: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      address: { type: String, default: null },
+      updatedAt: { type: Date, default: null },
+    },
   },
   { timestamps: true }
 );
@@ -74,11 +109,19 @@ userSchema.index({ email: 1 }, { sparse: true });
 userSchema.index({ phone: 1 });
 userSchema.index({ role: 1 });
 
-/* ── Pre-save hook: hash password ────────────────── */
+/* ── Pre-save hook: hash password + generate referral code ── */
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(12);
-  this.password = await bcrypt.hash(this.password, salt);
+  // Hash password if modified
+  if (this.isModified('password')) {
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+  }
+
+  // Generate unique referral code for new users
+  if (this.isNew && !this.referralCode) {
+    this.referralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+  }
+
   next();
 });
 

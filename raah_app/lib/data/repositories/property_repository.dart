@@ -92,6 +92,7 @@ class PropertyRepository {
     List<String>? images,
     List<String>? amenities,
     String? brokerId,
+    int existingFlatmates = 0,
   }) async {
     final body = <String, dynamic>{
       'title': title,
@@ -101,6 +102,7 @@ class PropertyRepository {
       'area': area,
       'city': city,
       'ownerId': ownerId,
+      'existingFlatmates': existingFlatmates,
     };
 
     if (images != null && images.isNotEmpty) {

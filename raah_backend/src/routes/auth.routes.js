@@ -21,6 +21,11 @@ const signupValidation = [
     .optional()
     .isIn(['customer', 'broker', 'owner'])
     .withMessage('Role must be customer, broker, or owner.'),
+  body('referralCode')
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage('Invalid referral code.'),
 ];
 
 const loginValidation = [

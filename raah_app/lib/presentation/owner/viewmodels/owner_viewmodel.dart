@@ -93,6 +93,7 @@ class OwnerViewModel extends ChangeNotifier {
     required String ownerId,
     List<String>? images,
     List<String>? amenities,
+    int existingFlatmates = 0,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -108,6 +109,7 @@ class OwnerViewModel extends ChangeNotifier {
         ownerId: ownerId,
         images: images,
         amenities: amenities,
+        existingFlatmates: existingFlatmates,
       );
       _isLoading = false;
       notifyListeners();

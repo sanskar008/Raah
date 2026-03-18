@@ -86,6 +86,7 @@ class AuthRepository {
     required String phone,
     required String password,
     required UserRole role,
+    String? referralCode,
   }) async {
     final body = {
       'name': name,
@@ -93,9 +94,12 @@ class AuthRepository {
       'password': password,
       'role': role.value,
     };
-    
+
     if (email != null && email.isNotEmpty) {
       body['email'] = email;
+    }
+    if (referralCode != null && referralCode.isNotEmpty) {
+      body['referralCode'] = referralCode;
     }
 
     final response = await _apiService.post(

@@ -161,15 +161,54 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
                         const SizedBox(height: AppConstants.spacingLg),
 
+                        // Flatmate info banner
+                        if (property.existingFlatmates > 0) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.spacingMd,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                              border: Border.all(
+                                color: AppColors.success.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.people_outline,
+                                  size: 18,
+                                  color: AppColors.success,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${property.existingFlatmates} flatmate${property.existingFlatmates > 1 ? 's' : ''} already here — rent is split ${property.existingFlatmates + 1} ways',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppConstants.spacingMd),
+                        ],
+
                         // Rent & Deposit
                         Row(
                           children: [
                             Expanded(
-                              child: _infoTile(
-                                'Rent',
-                                property.rent.toRent,
-                                Icons.payments_outlined,
-                              ),
+                              child: property.existingFlatmates > 0
+                                  ? _splitRentTile(property)
+                                  : _infoTile(
+                                      'Rent',
+                                      property.rent.toRent,
+                                      Icons.payments_outlined,
+                                    ),
                             ),
                             const SizedBox(width: AppConstants.spacingMd),
                             if (property.deposit != null)
@@ -374,10 +413,27 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      property.rent.toRent,
-                      style: AppTextStyles.price,
-                    ),
+                    if (property.existingFlatmates > 0) ...[
+                      Text(
+                        property.rent.toRent,
+                        style: AppTextStyles.price.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textHint,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: AppColors.textHint,
+                        ),
+                      ),
+                      Text(
+                        (property.rent / (property.existingFlatmates + 1)).toRent,
+                        style: AppTextStyles.price.copyWith(
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ] else
+                      Text(
+                        property.rent.toRent,
+                        style: AppTextStyles.price,
+                      ),
                     Text(
                       'Deposit: ${property.deposit?.toCurrency ?? 'N/A'}',
                       style: AppTextStyles.bodySmall,
@@ -463,6 +519,45 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
+      ),
+    );
+  }
+
+  Widget _splitRentTile(PropertyModel property) {
+    final perPersonRent = property.rent / (property.existingFlatmates + 1);
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.spacingMd),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.payments_outlined, color: AppColors.primary, size: 22),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Rent', style: AppTextStyles.caption),
+              Text(
+                property.rent.toRent,
+                style: AppTextStyles.priceSmall.copyWith(
+                  fontSize: 12,
+                  color: AppColors.textHint,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: AppColors.textHint,
+                ),
+              ),
+              Text(
+                perPersonRent.toRent,
+                style: AppTextStyles.priceSmall.copyWith(
+                  fontSize: 15,
+                  color: AppColors.success,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

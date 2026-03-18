@@ -24,6 +24,10 @@ const createPropertyValidation = [
   body('city').trim().notEmpty().withMessage('City is required.'),
   body('images').optional().isArray().withMessage('Images must be an array of URLs.'),
   body('amenities').optional().isArray().withMessage('Amenities must be an array.'),
+  body('existingFlatmates')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Existing flatmates must be a non-negative integer.'),
 ];
 
 /* ── Routes ──────────────────────────────────────── */

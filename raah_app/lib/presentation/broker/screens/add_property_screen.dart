@@ -43,6 +43,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   PropertyType _selectedType = PropertyType.room;
   final List<String> _selectedAmenities = [];
+  int _existingFlatmates = 0;
   bool _isSubmitting = false;
   
   // Image handling
@@ -169,6 +170,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           amenities: amenities,
           brokerId: user.id,
           images: imageUrls.isNotEmpty ? imageUrls : null,
+          existingFlatmates: _existingFlatmates,
         );
       } else if (user.role == UserRole.owner) {
         final ownerVM = context.read<OwnerViewModel>();
@@ -182,6 +184,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           ownerId: user.id,
           amenities: amenities,
           images: imageUrls.isNotEmpty ? imageUrls : null,
+          existingFlatmates: _existingFlatmates,
         );
       } else {
         throw Exception('Only brokers and owners can add properties');
@@ -452,6 +455,20 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   ),
                 ],
               ),
+
+              const SizedBox(height: AppConstants.spacingLg),
+
+              // ── Existing Flatmates ──
+              Text('Existing Flatmates', style: AppTextStyles.h4),
+              const SizedBox(height: 6),
+              Text(
+                'Are there already people living here? The rent will be split accordingly.',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppConstants.spacingMd),
+              _buildFlatmateStepper(),
 
               const SizedBox(height: AppConstants.spacingLg),
 
@@ -729,6 +746,99 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
             },
           ),
       ],
+    );
+  }
+
+  Widget _buildFlatmateStepper() {
+    final splitRent = _rentController.text.isNotEmpty && _existingFlatmates > 0
+        ? (double.tryParse(_rentController.text) ?? 0) / (_existingFlatmates + 1)
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.spacingMd),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+        border: Border.all(
+          color: _existingFlatmates > 0 ? AppColors.primary.withValues(alpha: 0.4) : AppColors.divider,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.people_outline, size: 20, color: AppColors.textSecondary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _existingFlatmates == 0
+                      ? 'No existing flatmates'
+                      : '$_existingFlatmates existing flatmate${_existingFlatmates > 1 ? 's' : ''}',
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+              // Decrement
+              GestureDetector(
+                onTap: _existingFlatmates > 0
+                    ? () => setState(() => _existingFlatmates--)
+                    : null,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: _existingFlatmates > 0
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.divider,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.remove,
+                    size: 18,
+                    color: _existingFlatmates > 0 ? AppColors.primary : AppColors.textHint,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  '$_existingFlatmates',
+                  style: AppTextStyles.h4.copyWith(fontSize: 18),
+                ),
+              ),
+              // Increment
+              GestureDetector(
+                onTap: () => setState(() => _existingFlatmates++),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.add, size: 18, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
+          if (splitRent != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.info_outline, size: 14, color: AppColors.textHint),
+                const SizedBox(width: 6),
+                Text(
+                  'Each person pays ₹${splitRent.toStringAsFixed(0)}/mo',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 

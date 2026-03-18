@@ -87,6 +87,7 @@ class BrokerViewModel extends ChangeNotifier {
     List<String>? images,
     List<String>? amenities,
     String? brokerId,
+    int existingFlatmates = 0,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -103,6 +104,7 @@ class BrokerViewModel extends ChangeNotifier {
         images: images,
         amenities: amenities,
         brokerId: brokerId,
+        existingFlatmates: existingFlatmates,
       );
       _isLoading = false;
       notifyListeners();

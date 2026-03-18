@@ -44,4 +44,11 @@ class ApiEndpoints {
   static const String chatConversations = '$baseUrl/chat/conversations';
   static String chatMessages(String conversationId) =>
       '$baseUrl/chat/conversations/$conversationId/messages';
+
+  // ── Coins History ──
+  static const String coinHistory = '$baseUrl/coins/history';
+
+  // ── User ──
+  static const String referralInfo = '$baseUrl/users/referral-info';
+  static const String updateLocation = '$baseUrl/users/location';
 }

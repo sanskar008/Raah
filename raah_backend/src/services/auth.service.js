@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const CoinTransaction = require('../models/CoinTransaction');
 const ApiError = require('../utils/ApiError');
 const { ROLES } = require('../utils/constants');
 
@@ -18,7 +19,7 @@ const generateToken = (userId) => {
  * - Hashes the password (handled by the User pre-save hook).
  * - Returns the user object + JWT.
  */
-const signup = async ({ name, email, phone, password, role }) => {
+const signup = async ({ name, email, phone, password, role, referralCode }) => {
   // Check if user already exists by phone (phone is now unique)
   const existingUser = await User.findOne({ phone });
   if (existingUser) {
@@ -38,7 +39,36 @@ const signup = async ({ name, email, phone, password, role }) => {
     throw new ApiError(400, `Invalid role. Must be one of: ${Object.values(ROLES).join(', ')}`);
   }
 
-  const user = await User.create({ name, email, phone, password, role });
+  // Resolve referrer if referral code provided
+  let referrer = null;
+  if (referralCode) {
+    referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+    // Silently ignore invalid codes — don't block signup
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    phone,
+    password,
+    role,
+    referredBy: referrer ? referrer._id : null,
+  });
+
+  // Reward referrer: +5 coins and increment count
+  if (referrer) {
+    const newBalance = referrer.coins + 5;
+    await User.findByIdAndUpdate(referrer._id, {
+      $inc: { coins: 5, referredCount: 1 },
+    });
+    await CoinTransaction.create({
+      userId: referrer._id,
+      amount: 5,
+      type: 'credit',
+      reason: `Referral bonus — ${user.name} joined using your code`,
+      balanceAfter: newBalance,
+    });
+  }
 
   // Strip password from the response object
   const userObj = user.toObject();

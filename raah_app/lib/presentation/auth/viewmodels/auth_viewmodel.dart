@@ -121,6 +121,7 @@ class AuthViewModel extends ChangeNotifier {
     required String phone,
     required String password,
     required UserRole role,
+    String? referralCode,
   }) async {
     _isLoading = true;
     _error = null;
@@ -133,6 +134,7 @@ class AuthViewModel extends ChangeNotifier {
         phone: phone,
         password: password,
         role: role,
+        referralCode: referralCode,
       );
       _isLoading = false;
       notifyListeners();

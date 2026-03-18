@@ -8,9 +8,9 @@ const authService = require('../services/auth.service');
  * @access  Public
  */
 const signup = asyncHandler(async (req, res) => {
-  const { name, email, phone, password, role } = req.body;
+  const { name, email, phone, password, role, referralCode } = req.body;
 
-  const result = await authService.signup({ name, email: email || undefined, phone, password, role });
+  const result = await authService.signup({ name, email: email || undefined, phone, password, role, referralCode: referralCode || undefined });
 
   res.status(201).json(new ApiResponse(201, 'User registered successfully.', result));
 });

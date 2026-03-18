@@ -26,6 +26,7 @@ class _SignupScreenState extends State<SignupScreen>
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -55,6 +56,7 @@ class _SignupScreenState extends State<SignupScreen>
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -73,12 +75,14 @@ class _SignupScreenState extends State<SignupScreen>
 
     final authVM = context.read<AuthViewModel>();
     final email = _emailController.text.trim();
+    final referral = _referralCodeController.text.trim();
     final success = await authVM.signup(
       name: _nameController.text.trim(),
       email: email.isEmpty ? null : email,
       phone: _phoneController.text.trim(),
       password: _passwordController.text,
       role: _selectedRole,
+      referralCode: referral.isEmpty ? null : referral,
     );
 
     if (success && mounted) {
@@ -244,6 +248,21 @@ class _SignupScreenState extends State<SignupScreen>
                     ),
                     onPressed: () =>
                         setState(() => _obscureConfirm = !_obscureConfirm),
+                  ),
+                ),
+
+                const SizedBox(height: AppConstants.spacingMd),
+
+                // ── Referral Code (Optional) ──
+                CustomTextField(
+                  label: 'Referral Code (Optional)',
+                  hint: 'Enter a friend\'s referral code',
+                  controller: _referralCodeController,
+                  textInputAction: TextInputAction.done,
+                  prefixIcon: const Icon(
+                    Icons.card_giftcard_rounded,
+                    color: AppColors.textHint,
+                    size: 20,
                   ),
                 ),
 

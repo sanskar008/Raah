@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/constants/api_endpoints.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
+import 'referral_screen.dart';
+import 'coin_history_screen.dart';
 
 /// Editable profile screen — lets the user view and update their info.
 /// Elegant layout with avatar, editable fields, and save action.
@@ -27,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isUpdatingLocation = false;
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -89,6 +95,69 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
     }
+  }
+
+  Future<void> _updateLocation() async {
+    setState(() => _isUpdatingLocation = true);
+    final apiService = context.read<ApiService>();
+
+    try {
+      // Check and request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever ||
+          permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        setState(() => _isUpdatingLocation = false);
+        return;
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      await apiService.put(ApiEndpoints.updateLocation, body: {
+        'lat': pos.latitude,
+        'lng': pos.longitude,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Location updated successfully'),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update location: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+
+    if (mounted) setState(() => _isUpdatingLocation = false);
   }
 
   void _toggleEdit() {
@@ -295,6 +364,68 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                   const SizedBox(height: AppConstants.spacingLg),
 
+                  // ── Quick Actions ──
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: Column(
+                      children: [
+                        _actionTile(
+                          icon: Icons.card_giftcard_rounded,
+                          label: 'Refer & Earn',
+                          subtitle: 'Earn 5 coins per referral',
+                          color: AppColors.accent,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ReferralScreen(),
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _actionTile(
+                          icon: Icons.toll_outlined,
+                          label: 'Coin History',
+                          subtitle: '${user?.coins ?? 0} coins balance',
+                          color: AppColors.primary,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const CoinHistoryScreen(),
+                            ),
+                          ),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _actionTile(
+                          icon: Icons.my_location_rounded,
+                          label: 'Share My Location',
+                          subtitle: _isUpdatingLocation
+                              ? 'Updating…'
+                              : (user?.locationLat != null
+                                  ? 'Location saved'
+                                  : 'Tap to share location'),
+                          color: AppColors.success,
+                          trailing: _isUpdatingLocation
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : null,
+                          onTap: _isUpdatingLocation ? null : _updateLocation,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppConstants.spacingLg),
+
                   // ── Danger Zone ──
                   Container(
                     width: double.infinity,
@@ -354,6 +485,32 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _actionTile({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required VoidCallback? onTap,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(label, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
+      subtitle: Text(subtitle, style: AppTextStyles.caption),
+      trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd, vertical: 4),
     );
   }
 

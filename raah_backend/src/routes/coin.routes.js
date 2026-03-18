@@ -9,6 +9,7 @@ const {
   purchaseCoinPack,
   unlockProperty,
   getCustomerWallet,
+  getCoinHistory,
 } = require('../controllers/coin.controller');
 
 const router = Router();
@@ -32,5 +33,6 @@ const unlockValidation = [
 router.post('/purchase', purchaseValidation, validate, purchaseCoinPack);
 router.post('/unlock-property', unlockValidation, validate, unlockProperty);
 router.get('/wallet', getCustomerWallet);
+router.get('/history', getCoinHistory);
 
 module.exports = router;

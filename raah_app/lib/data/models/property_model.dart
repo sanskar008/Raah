@@ -23,6 +23,7 @@ class PropertyModel {
   final bool isAvailable;
   final DateTime? createdAt;
   final bool? isUnlocked; // Whether customer has unlocked this property
+  final int existingFlatmates; // Number of existing flatmates (0 = none)
 
   PropertyModel({
     required this.id,
@@ -46,6 +47,7 @@ class PropertyModel {
     this.isAvailable = true,
     this.createdAt,
     this.isUnlocked,
+    this.existingFlatmates = 0,
   });
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
@@ -96,6 +98,7 @@ class PropertyModel {
               ? DateTime.parse(json['created_at'])
               : null,
       isUnlocked: json['isUnlocked'],
+      existingFlatmates: (json['existingFlatmates'] ?? 0) as int,
     );
   }
 
@@ -121,6 +124,7 @@ class PropertyModel {
       'area_sq_ft': areaSqFt,
       'is_available': isAvailable,
       'created_at': createdAt?.toIso8601String(),
+      'existingFlatmates': existingFlatmates,
     };
   }
 }

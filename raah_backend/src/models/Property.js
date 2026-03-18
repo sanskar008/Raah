@@ -48,6 +48,16 @@ const propertySchema = new mongoose.Schema(
       default: [],
     },
     /**
+     * Number of existing flatmates already living in the property.
+     * If > 0, the rent is effectively split: rent / (existingFlatmates + 1)
+     * so the new tenant only pays their share.
+     */
+    existingFlatmates: {
+      type: Number,
+      default: 0,
+      min: [0, 'Existing flatmates cannot be negative'],
+    },
+    /**
      * The user who owns the physical property.
      * Always required — even when a broker lists it on behalf of an owner,
      * the owner is captured here.

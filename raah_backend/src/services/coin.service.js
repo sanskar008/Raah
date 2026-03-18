@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const CoinPack = require('../models/CoinPack');
 const UnlockedProperty = require('../models/UnlockedProperty');
+const CoinTransaction = require('../models/CoinTransaction');
 const Property = require('../models/Property');
 const ApiError = require('../utils/ApiError');
 const { ROLES } = require('../utils/constants');
@@ -39,16 +40,26 @@ const purchaseCoinPack = async (customerId, packId) => {
   // For now, we'll just add the coins
 
   const totalCoins = pack.coins + (pack.bonusCoins || 0);
+  const newBalance = customer.coins + totalCoins;
 
   // Update customer's coin balance
   await User.findByIdAndUpdate(customerId, {
     $inc: { coins: totalCoins },
   });
 
+  // Log the transaction
+  await CoinTransaction.create({
+    userId: customerId,
+    amount: totalCoins,
+    type: 'credit',
+    reason: `Purchased ${pack.name} (${totalCoins} coins)`,
+    balanceAfter: newBalance,
+  });
+
   return {
     pack: pack.toObject(),
     coinsAdded: totalCoins,
-    newBalance: customer.coins + totalCoins,
+    newBalance,
   };
 };
 
@@ -102,10 +113,28 @@ const unlockProperty = async (customerId, propertyId) => {
     await User.findByIdAndUpdate(customerId, {
       $inc: { coins: -coinsRequired },
     });
+    // Log the debit transaction
+    await CoinTransaction.create({
+      userId: customerId,
+      amount: -coinsRequired,
+      type: 'debit',
+      reason: `Unlocked property: ${property.title}`,
+      propertyId: property._id,
+      balanceAfter: customer.coins - coinsRequired,
+    });
   } else {
     // Increment free views used
     await User.findByIdAndUpdate(customerId, {
       $inc: { freePropertyViewsUsed: 1 },
+    });
+    // Log as free view
+    await CoinTransaction.create({
+      userId: customerId,
+      amount: 0,
+      type: 'debit',
+      reason: `Free view: ${property.title} (free view ${customer.freePropertyViewsUsed + 1}/3)`,
+      propertyId: property._id,
+      balanceAfter: customer.coins,
     });
   }
 
@@ -165,10 +194,34 @@ const isPropertyUnlocked = async (customerId, propertyId) => {
   return !!unlock;
 };
 
+/**
+ * Get coin transaction history for a customer.
+ */
+const getCoinHistory = async (customerId) => {
+  const customer = await User.findById(customerId).select('coins freePropertyViewsUsed');
+  if (!customer) {
+    throw new ApiError(404, 'Customer not found.');
+  }
+
+  const transactions = await CoinTransaction.find({ userId: customerId })
+    .populate('propertyId', 'title city area')
+    .sort('-createdAt')
+    .limit(100)
+    .lean();
+
+  return {
+    currentBalance: customer.coins,
+    freeViewsUsed: customer.freePropertyViewsUsed,
+    freeViewsRemaining: Math.max(0, 3 - customer.freePropertyViewsUsed),
+    transactions,
+  };
+};
+
 module.exports = {
   getCoinPacks,
   purchaseCoinPack,
   unlockProperty,
   getCustomerWallet,
   isPropertyUnlocked,
+  getCoinHistory,
 };
