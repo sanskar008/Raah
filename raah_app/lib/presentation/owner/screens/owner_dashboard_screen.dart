@@ -61,14 +61,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     children: [
                       // Hamburger menu
                       GestureDetector(
-                        onTap: () =>
-                            _scaffoldKey.currentState?.openDrawer(),
+                        onTap: () => _scaffoldKey.currentState?.openDrawer(),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceVariant,
                             borderRadius: BorderRadius.circular(
-                                AppConstants.radiusSm),
+                              AppConstants.radiusSm,
+                            ),
                           ),
                           child: const Icon(
                             Icons.menu_rounded,
@@ -89,8 +89,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Text('Owner Dashboard',
-                                style: AppTextStyles.h3),
+                            Text('Owner Dashboard', style: AppTextStyles.h3),
                           ],
                         ),
                       ),
@@ -108,7 +107,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           radius: 22,
                           backgroundColor: AppColors.primary,
                           child: Text(
-                            (authVM.user?.name ?? 'O')[0].toUpperCase(),
+                            (authVM.user?.name != null &&
+                                        authVM.user!.name.isNotEmpty
+                                    ? authVM.user!.name[0]
+                                    : 'O')
+                                .toUpperCase(),
                             style: const TextStyle(
                               color: AppColors.textOnPrimary,
                               fontWeight: FontWeight.w600,
@@ -145,8 +148,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const OwnerAppointmentsScreen(),
+                                builder: (_) => const OwnerAppointmentsScreen(),
                               ),
                             );
                           },
@@ -183,9 +185,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const AddPropertyScreen(
-                                        showCoinsInfo: false),
+                                builder: (_) => const AddPropertyScreen(
+                                  showCoinsInfo: false,
+                                ),
                               ),
                             );
                           },
@@ -200,8 +202,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    const OwnerAppointmentsScreen(),
+                                builder: (_) => const OwnerAppointmentsScreen(),
                               ),
                             );
                           },
@@ -233,23 +234,21 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               // ── Properties List ──
               if (ownerVM.isLoading)
                 const SliverFillRemaining(
-                  child: LoadingWidget(
-                      message: 'Loading properties...'),
+                  child: LoadingWidget(message: 'Loading properties...'),
                 )
               else if (ownerVM.properties.isEmpty)
                 SliverFillRemaining(
                   child: EmptyStateWidget(
                     icon: Icons.home_outlined,
                     title: 'No properties yet',
-                    subtitle:
-                        'Add your first property to get started',
+                    subtitle: 'Add your first property to get started',
                     actionText: 'Add Property',
                     onAction: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const AddPropertyScreen(
-                              showCoinsInfo: false),
+                          builder: (_) =>
+                              const AddPropertyScreen(showCoinsInfo: false),
                         ),
                       );
                     },
@@ -257,121 +256,111 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 )
               else
                 SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final property = ownerVM.properties[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppConstants.spacingLg,
-                          vertical: AppConstants.spacingXs,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(
-                                AppConstants.radiusMd),
-                            border: Border.all(
-                                color: AppColors.cardBorder),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final property = ownerVM.properties[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppConstants.spacingLg,
+                        vertical: AppConstants.spacingXs,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusMd,
                           ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(
-                                AppConstants.spacingMd),
-                            leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(
-                                  AppConstants.radiusSm),
-                              child: property.imageUrls.isNotEmpty
-                                  ? Image.network(
-                                      property.imageUrls[0],
-                                      width: 64,
-                                      height: 64,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (_, __, ___) =>
-                                              _imagePlaceholder(),
-                                    )
-                                  : _imagePlaceholder(),
+                          border: Border.all(color: AppColors.cardBorder),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(
+                            AppConstants.spacingMd,
+                          ),
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.radiusSm,
                             ),
-                            title: Text(
-                              property.title,
-                              style:
-                                  AppTextStyles.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                            child: property.imageUrls.isNotEmpty
+                                ? Image.network(
+                                    property.imageUrls[0],
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _imagePlaceholder(),
+                                  )
+                                : _imagePlaceholder(),
+                          ),
+                          title: Text(
+                            property.title,
+                            style: AppTextStyles.bodyLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text(
+                                property.rent.toRent,
+                                style: AppTextStyles.priceSmall.copyWith(
+                                  fontSize: 14,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Text(
-                                  property.rent.toRent,
-                                  style: AppTextStyles.priceSmall
-                                      .copyWith(fontSize: 14),
+                              Text(
+                                '${property.area}, ${property.city}',
+                                style: AppTextStyles.bodySmall,
+                              ),
+                            ],
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 20,
                                 ),
-                                Text(
-                                  '${property.area}, ${property.city}',
-                                  style: AppTextStyles.bodySmall,
-                                ),
-                              ],
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.calendar_today_outlined,
-                                    size: 20,
-                                  ),
-                                  tooltip: 'Purchase Rental Period',
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => RentalPaymentScreen(
-                                          property: property,
-                                        ),
+                                tooltip: 'Purchase Rental Period',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => RentalPaymentScreen(
+                                        property: property,
                                       ),
-                                    );
-                                  },
+                                    ),
+                                  );
+                                },
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
                                 ),
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
+                                decoration: BoxDecoration(
+                                  color: property.isAvailable
+                                      ? AppColors.success.withValues(alpha: 0.1)
+                                      : AppColors.error.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  property.isAvailable ? 'Active' : 'Inactive',
+                                  style: AppTextStyles.caption.copyWith(
                                     color: property.isAvailable
                                         ? AppColors.success
-                                            .withValues(alpha: 0.1)
-                                        : AppColors.error
-                                            .withValues(alpha: 0.1),
-                                    borderRadius:
-                                        BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    property.isAvailable
-                                        ? 'Active'
-                                        : 'Inactive',
-                                    style:
-                                        AppTextStyles.caption.copyWith(
-                                      color: property.isAvailable
-                                          ? AppColors.success
-                                          : AppColors.error,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                        : AppColors.error,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                    childCount: ownerVM.properties.length,
-                  ),
+                      ),
+                    );
+                  }, childCount: ownerVM.properties.length),
                 ),
 
               const SliverToBoxAdapter(
@@ -387,8 +376,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) =>
-                  const AddPropertyScreen(showCoinsInfo: false),
+              builder: (_) => const AddPropertyScreen(showCoinsInfo: false),
             ),
           );
         },
@@ -408,8 +396,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       padding: const EdgeInsets.all(AppConstants.spacingMd),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius:
-            BorderRadius.circular(AppConstants.radiusMd),
+        borderRadius: BorderRadius.circular(AppConstants.radiusMd),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
@@ -417,8 +404,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         children: [
           Icon(icon, color: color, size: 28),
           const SizedBox(height: AppConstants.spacingMd),
-          Text(value,
-              style: AppTextStyles.h2.copyWith(color: color)),
+          Text(value, style: AppTextStyles.h2.copyWith(color: color)),
           Text(label, style: AppTextStyles.bodySmall),
         ],
       ),
@@ -436,8 +422,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         padding: const EdgeInsets.all(AppConstants.spacingMd),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius:
-              BorderRadius.circular(AppConstants.radiusMd),
+          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
           border: Border.all(color: AppColors.cardBorder),
         ),
         child: Row(
@@ -445,12 +430,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color:
-                    AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon,
-                  color: AppColors.primary, size: 22),
+              child: Icon(icon, color: AppColors.primary, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -472,8 +455,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       width: 64,
       height: 64,
       color: AppColors.surfaceVariant,
-      child: const Icon(Icons.image_outlined,
-          color: AppColors.textHint),
+      child: const Icon(Icons.image_outlined, color: AppColors.textHint),
     );
   }
 }

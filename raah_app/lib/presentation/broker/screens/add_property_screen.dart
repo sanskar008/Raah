@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -45,17 +46,34 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final List<String> _selectedAmenities = [];
   int _existingFlatmates = 0;
   bool _isSubmitting = false;
-  
+
   // Image handling
   final ImagePicker _imagePicker = ImagePicker();
   final List<File> _selectedImages = [];
   bool _isUploadingImages = false;
 
   final List<String> _allAmenities = [
-    'WiFi', 'AC', 'Parking', 'Gym', 'Swimming Pool', 'Kitchen',
-    'Washing Machine', 'Security', 'Power Backup', 'Lift', 'Balcony',
-    'Garden', 'Meals', 'Housekeeping', 'Geyser', 'Fan', 'Cupboard',
-    'Water Supply', 'Club House', 'Children Play Area', 'Laundry',
+    'WiFi',
+    'AC',
+    'Parking',
+    'Gym',
+    'Swimming Pool',
+    'Kitchen',
+    'Washing Machine',
+    'Security',
+    'Power Backup',
+    'Lift',
+    'Balcony',
+    'Garden',
+    'Meals',
+    'Housekeeping',
+    'Geyser',
+    'Fan',
+    'Cupboard',
+    'Water Supply',
+    'Club House',
+    'Children Play Area',
+    'Laundry',
   ];
 
   @override
@@ -139,9 +157,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         }
 
         imageUrls = await ImageUploadService.uploadImages(_selectedImages);
-        
+
         if (imageUrls.isEmpty) {
-          throw Exception('Unable to upload images. Please check your internet connection and try again.');
+          throw Exception(
+            'Unable to upload images. Please check your internet connection and try again.',
+          );
         }
       }
 
@@ -156,6 +176,28 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       final deposit = double.parse(_depositController.text);
       final amenities = _selectedAmenities.isEmpty ? null : _selectedAmenities;
 
+      // Try to get current location (optional). If permission denied, continue without location.
+      double? lat;
+      double? lng;
+      try {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission != LocationPermission.denied &&
+            permission != LocationPermission.deniedForever) {
+          final pos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+            ),
+          );
+          lat = pos.latitude;
+          lng = pos.longitude;
+        }
+      } catch (_) {
+        // ignore and continue without location
+      }
+
       bool success;
       if (user.role == UserRole.broker) {
         final brokerVM = context.read<BrokerViewModel>();
@@ -166,11 +208,14 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           deposit: deposit,
           area: _areaController.text.trim(),
           city: _cityController.text.trim(),
-          ownerId: user.id, // For brokers, they can set ownerId or use their own
+          ownerId:
+              user.id, // For brokers, they can set ownerId or use their own
           amenities: amenities,
           brokerId: user.id,
           images: imageUrls.isNotEmpty ? imageUrls : null,
           existingFlatmates: _existingFlatmates,
+          lat: lat,
+          lng: lng,
         );
       } else if (user.role == UserRole.owner) {
         final ownerVM = context.read<OwnerViewModel>();
@@ -185,6 +230,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           amenities: amenities,
           images: imageUrls.isNotEmpty ? imageUrls : null,
           existingFlatmates: _existingFlatmates,
+          lat: lat,
+          lng: lng,
         );
       } else {
         throw Exception('Only brokers and owners can add properties');
@@ -216,12 +263,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
             SnackBar(
               content: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     user.role == UserRole.broker
-                        ? context.read<BrokerViewModel>().error ?? 'Failed to add property'
-                        : context.read<OwnerViewModel>().error ?? 'Failed to add property',
+                        ? context.read<BrokerViewModel>().error ??
+                              'Failed to add property'
+                        : context.read<OwnerViewModel>().error ??
+                              'Failed to add property',
                   ),
                 ],
               ),
@@ -230,11 +283,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           );
         }
       }
-      } catch (e) {
+    } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
         final errorMessage = ErrorMessages.getContextMessage('image_upload', e);
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -273,12 +326,10 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               if (widget.showCoinsInfo)
                 Container(
                   padding: const EdgeInsets.all(AppConstants.spacingMd),
-                  margin: const EdgeInsets.only(
-                      bottom: AppConstants.spacingLg),
+                  margin: const EdgeInsets.only(bottom: AppConstants.spacingLg),
                   decoration: BoxDecoration(
                     color: AppColors.accentSoft,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusMd),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusMd),
                   ),
                   child: Row(
                     children: [
@@ -357,9 +408,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       controller: _rentController,
                       validator: Validators.rent,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),
@@ -369,9 +418,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       hint: '30000',
                       controller: _depositController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
                 ],
@@ -424,9 +471,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       hint: '2',
                       controller: _bedroomsController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),
@@ -436,9 +481,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       hint: '1',
                       controller: _bathroomsController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),
@@ -448,9 +491,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       hint: '800',
                       controller: _areaSqFtController,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
                 ],
@@ -500,8 +541,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         color: isSelected
                             ? AppColors.primary.withValues(alpha: 0.1)
                             : AppColors.surfaceVariant,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusFull,
+                        ),
                         border: Border.all(
                           color: isSelected
                               ? AppColors.primary
@@ -528,8 +570,14 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
               // ── Submit ──
               CustomButton(
-                text: _isUploadingImages ? 'Uploading Images...' : 'Submit Property',
-                onPressed: (_isSubmitting || _isUploadingImages) ? null : _canSubmitProperty() ? _submitProperty : null,
+                text: _isUploadingImages
+                    ? 'Uploading Images...'
+                    : 'Submit Property',
+                onPressed: (_isSubmitting || _isUploadingImages)
+                    ? null
+                    : _canSubmitProperty()
+                    ? _submitProperty
+                    : null,
                 isLoading: _isSubmitting || _isUploadingImages,
                 icon: Icons.upload_rounded,
               ),
@@ -551,14 +599,14 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       // For owners, only allow camera (live capture)
       // For brokers, allow gallery selection
       List<XFile> pickedFiles = [];
-      
+
       if (isOwner) {
         // Owners can only use camera - pick one at a time
         final XFile? pickedFile = await _imagePicker.pickImage(
           source: ImageSource.camera,
           imageQuality: 85,
         );
-        
+
         if (pickedFile != null) {
           pickedFiles = [pickedFile];
         }
@@ -566,7 +614,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         // Brokers can pick from gallery
         pickedFiles = await _imagePicker.pickMultiImage();
       }
-      
+
       if (pickedFiles.isEmpty) return;
 
       // Limit to 5 images total
@@ -584,7 +632,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
       }
 
       final filesToAdd = pickedFiles.take(remainingSlots).toList();
-      
+
       setState(() {
         for (var file in filesToAdd) {
           _selectedImages.add(File(file.path));
@@ -641,11 +689,15 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusMd,
+                          ),
                           border: Border.all(color: AppColors.divider),
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusMd,
+                          ),
                           child: Image.file(
                             _selectedImages[index],
                             fit: BoxFit.cover,
@@ -680,7 +732,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               },
             ),
           ),
-        
+
         // Upload button
         if (_selectedImages.length < 5)
           Builder(
@@ -688,7 +740,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               final authVM = context.read<AuthViewModel>();
               final user = authVM.user;
               final isOwner = user?.role == UserRole.owner;
-              
+
               return GestureDetector(
                 onTap: _pickImages,
                 child: Container(
@@ -706,7 +758,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isOwner ? Icons.camera_alt_outlined : Icons.add_photo_alternate_outlined,
+                          isOwner
+                              ? Icons.camera_alt_outlined
+                              : Icons.add_photo_alternate_outlined,
                           size: 36,
                           color: AppColors.primary,
                         ),
@@ -714,11 +768,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                         Text(
                           isOwner
                               ? (_selectedImages.isEmpty
-                                  ? 'Tap to capture photo'
-                                  : 'Capture more photos')
+                                    ? 'Tap to capture photo'
+                                    : 'Capture more photos')
                               : (_selectedImages.isEmpty
-                                  ? 'Tap to add images'
-                                  : 'Add more images'),
+                                    ? 'Tap to add images'
+                                    : 'Add more images'),
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.primary,
                           ),
@@ -751,7 +805,8 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
 
   Widget _buildFlatmateStepper() {
     final splitRent = _rentController.text.isNotEmpty && _existingFlatmates > 0
-        ? (double.tryParse(_rentController.text) ?? 0) / (_existingFlatmates + 1)
+        ? (double.tryParse(_rentController.text) ?? 0) /
+              (_existingFlatmates + 1)
         : null;
 
     return Container(
@@ -760,7 +815,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppConstants.radiusMd),
         border: Border.all(
-          color: _existingFlatmates > 0 ? AppColors.primary.withValues(alpha: 0.4) : AppColors.divider,
+          color: _existingFlatmates > 0
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : AppColors.divider,
         ),
       ),
       child: Column(
@@ -768,14 +825,20 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.people_outline, size: 20, color: AppColors.textSecondary),
+              const Icon(
+                Icons.people_outline,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   _existingFlatmates == 0
                       ? 'No existing flatmates'
                       : '$_existingFlatmates existing flatmate${_existingFlatmates > 1 ? 's' : ''}',
-                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
               // Decrement
@@ -795,7 +858,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   child: Icon(
                     Icons.remove,
                     size: 18,
-                    color: _existingFlatmates > 0 ? AppColors.primary : AppColors.textHint,
+                    color: _existingFlatmates > 0
+                        ? AppColors.primary
+                        : AppColors.textHint,
                   ),
                 ),
               ),
@@ -816,7 +881,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.add, size: 18, color: AppColors.primary),
+                  child: const Icon(
+                    Icons.add,
+                    size: 18,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -825,7 +894,11 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
             const SizedBox(height: 10),
             Row(
               children: [
-                const Icon(Icons.info_outline, size: 14, color: AppColors.textHint),
+                const Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: AppColors.textHint,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Each person pays ₹${splitRent.toStringAsFixed(0)}/mo',
@@ -862,12 +935,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                   color: isSelected
                       ? AppColors.primary
                       : AppColors.surfaceVariant,
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusSm),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusSm),
                   border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.divider,
+                    color: isSelected ? AppColors.primary : AppColors.divider,
                   ),
                 ),
                 child: Text(
@@ -876,8 +946,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     color: isSelected
                         ? AppColors.textOnPrimary
                         : AppColors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 13,
                   ),
                   textAlign: TextAlign.center,

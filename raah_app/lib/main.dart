@@ -63,11 +63,21 @@ void main() async {
   // Initialize auth (check for persisted login)
   await authViewModel.initialize();
 
+  // Fire-and-forget: warm the backend (Render) so cold starts are reduced.
+  // This intentionally does not block app startup.
+  apiService
+      .get('https://raah-cqwp.onrender.com/api', auth: false)
+      .then((_) => debugPrint('Backend warmup request sent.'))
+      .catchError((e) => debugPrint('Backend warmup failed: $e'));
+
   runApp(
     /// MultiProvider at the root — provides all ViewModels to the widget tree.
     /// This is the MVVM "glue" with Provider as the DI mechanism.
     MultiProvider(
       providers: [
+        // Provide core ApiService so widgets can call network APIs via context.read<ApiService>()
+        Provider.value(value: apiService),
+
         // Auth ViewModel — global, used everywhere
         ChangeNotifierProvider.value(value: authViewModel),
 

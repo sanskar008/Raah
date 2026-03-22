@@ -7,7 +7,8 @@ import '../../domain/enums/property_type.dart';
 class PropertyRepository {
   final ApiService _apiService;
 
-  PropertyRepository({required ApiService apiService}) : _apiService = apiService;
+  PropertyRepository({required ApiService apiService})
+    : _apiService = apiService;
 
   // ── Fetch all properties (with optional filters) ──
   Future<List<PropertyModel>> getProperties({
@@ -93,6 +94,8 @@ class PropertyRepository {
     List<String>? amenities,
     String? brokerId,
     int existingFlatmates = 0,
+    double? lat,
+    double? lng,
   }) async {
     final body = <String, dynamic>{
       'title': title,
@@ -113,6 +116,11 @@ class PropertyRepository {
     }
     if (brokerId != null) {
       body['brokerId'] = brokerId;
+    }
+    // Include location if available
+    if (lat != null && lng != null) {
+      body['lat'] = lat;
+      body['lng'] = lng;
     }
 
     final response = await _apiService.post(

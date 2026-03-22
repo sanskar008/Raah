@@ -13,8 +13,8 @@ class BrokerViewModel extends ChangeNotifier {
   BrokerViewModel({
     required PropertyRepository propertyRepository,
     required WalletRepository walletRepository,
-  })  : _propertyRepository = propertyRepository,
-        _walletRepository = walletRepository;
+  }) : _propertyRepository = propertyRepository,
+       _walletRepository = walletRepository;
 
   // ── State ──
   List<PropertyModel> _properties = [];
@@ -88,6 +88,8 @@ class BrokerViewModel extends ChangeNotifier {
     List<String>? amenities,
     String? brokerId,
     int existingFlatmates = 0,
+    double? lat,
+    double? lng,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -105,6 +107,8 @@ class BrokerViewModel extends ChangeNotifier {
         amenities: amenities,
         brokerId: brokerId,
         existingFlatmates: existingFlatmates,
+        lat: lat,
+        lng: lng,
       );
       _isLoading = false;
       notifyListeners();

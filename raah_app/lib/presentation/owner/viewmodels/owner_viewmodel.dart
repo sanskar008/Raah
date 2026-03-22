@@ -14,8 +14,8 @@ class OwnerViewModel extends ChangeNotifier {
   OwnerViewModel({
     required PropertyRepository propertyRepository,
     required AppointmentRepository appointmentRepository,
-  })  : _propertyRepository = propertyRepository,
-        _appointmentRepository = appointmentRepository;
+  }) : _propertyRepository = propertyRepository,
+       _appointmentRepository = appointmentRepository;
 
   // ── State ──
   List<PropertyModel> _properties = [];
@@ -67,7 +67,9 @@ class OwnerViewModel extends ChangeNotifier {
 
   // ── Accept/Reject appointment ──
   Future<void> updateAppointmentStatus(
-      String id, AppointmentStatus status) async {
+    String id,
+    AppointmentStatus status,
+  ) async {
     try {
       if (status == AppointmentStatus.accepted) {
         await _appointmentRepository.acceptAppointment(id);
@@ -94,6 +96,8 @@ class OwnerViewModel extends ChangeNotifier {
     List<String>? images,
     List<String>? amenities,
     int existingFlatmates = 0,
+    double? lat,
+    double? lng,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -110,7 +114,10 @@ class OwnerViewModel extends ChangeNotifier {
         images: images,
         amenities: amenities,
         existingFlatmates: existingFlatmates,
+        lat: lat,
+        lng: lng,
       );
+
       _isLoading = false;
       notifyListeners();
       return true;

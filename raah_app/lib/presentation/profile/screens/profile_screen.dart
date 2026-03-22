@@ -49,9 +49,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       vsync: this,
       duration: AppConstants.animSlow,
     );
-    _fadeAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
+    _fadeAnim = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
@@ -127,10 +128,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
       );
 
-      await apiService.put(ApiEndpoints.updateLocation, body: {
-        'lat': pos.latitude,
-        'lng': pos.longitude,
-      });
+      await apiService.put(
+        ApiEndpoints.updateLocation,
+        body: {'lat': pos.latitude, 'lng': pos.longitude},
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +213,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                       radius: 52,
                       backgroundColor: AppColors.primary,
                       child: Text(
-                        (user?.name ?? 'U')[0].toUpperCase(),
+                        (user?.name != null && user!.name.isNotEmpty ? user.name[0] : 'U')
+                            .toUpperCase(),
                         style: const TextStyle(
                           color: AppColors.textOnPrimary,
                           fontWeight: FontWeight.w700,
@@ -254,8 +256,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusFull),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusFull,
+                    ),
                   ),
                   child: Text(
                     user?.role.label ?? 'User',
@@ -330,8 +333,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     padding: const EdgeInsets.all(AppConstants.spacingMd),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusMd,
+                      ),
                       border: Border.all(color: AppColors.cardBorder),
                     ),
                     child: Column(
@@ -369,7 +373,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusMd,
+                      ),
                       border: Border.all(color: AppColors.cardBorder),
                     ),
                     child: Column(
@@ -399,27 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                             ),
                           ),
                         ),
-                        const Divider(height: 1, indent: 56),
-                        _actionTile(
-                          icon: Icons.my_location_rounded,
-                          label: 'Share My Location',
-                          subtitle: _isUpdatingLocation
-                              ? 'Updating…'
-                              : (user?.locationLat != null
-                                  ? 'Location saved'
-                                  : 'Tap to share location'),
-                          color: AppColors.success,
-                          trailing: _isUpdatingLocation
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : null,
-                          onTap: _isUpdatingLocation ? null : _updateLocation,
-                        ),
+                        const SizedBox(),
                       ],
                     ),
                   ),
@@ -432,8 +418,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                     padding: const EdgeInsets.all(AppConstants.spacingMd),
                     decoration: BoxDecoration(
                       color: AppColors.error.withValues(alpha: 0.04),
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusMd,
+                      ),
                       border: Border.all(
                         color: AppColors.error.withValues(alpha: 0.2),
                       ),
@@ -507,10 +494,18 @@ class _ProfileScreenState extends State<ProfileScreen>
         ),
         child: Icon(icon, color: color, size: 20),
       ),
-      title: Text(label, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500)),
+      title: Text(
+        label,
+        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w500),
+      ),
       subtitle: Text(subtitle, style: AppTextStyles.caption),
-      trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd, vertical: 4),
+      trailing:
+          trailing ??
+          const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.spacingMd,
+        vertical: 4,
+      ),
     );
   }
 
@@ -556,9 +551,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               Navigator.pop(context); // pop profile
               authVM.logout();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Sign Out'),
           ),
         ],

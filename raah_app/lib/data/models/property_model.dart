@@ -53,30 +53,32 @@ class PropertyModel {
   factory PropertyModel.fromJson(Map<String, dynamic> json) {
     // Handle MongoDB _id format and populated ownerId/brokerId
     final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
-    
+
     // Handle populated ownerId (can be object or string)
     final ownerIdObj = json['ownerId'];
-    final ownerId = ownerIdObj is Map 
+    final ownerId = ownerIdObj is Map
         ? (ownerIdObj['_id']?.toString() ?? ownerIdObj['id']?.toString() ?? '')
         : ownerIdObj?.toString() ?? json['owner_id']?.toString() ?? '';
-    
-    final ownerName = ownerIdObj is Map 
+
+    final ownerName = ownerIdObj is Map
         ? (ownerIdObj['name'] ?? '')
         : json['ownerName'] ?? json['owner_name'] ?? '';
-    
-    final ownerPhone = ownerIdObj is Map 
+
+    final ownerPhone = ownerIdObj is Map
         ? (ownerIdObj['phone'] ?? '')
         : json['ownerPhone'] ?? json['owner_phone'] ?? '';
-    
+
     // Check if brokerId exists (broker listed)
     final brokerIdObj = json['brokerId'];
     final isBrokerListed = brokerIdObj != null;
-    
+
     return PropertyModel(
       id: id,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      propertyType: PropertyType.fromString(json['propertyType'] ?? json['property_type'] ?? 'room'),
+      propertyType: PropertyType.fromString(
+        json['propertyType'] ?? json['property_type'] ?? 'room',
+      ),
       rent: (json['rent'] ?? 0).toDouble(),
       deposit: json['deposit']?.toDouble(),
       address: json['address'] ?? '',
@@ -91,12 +93,54 @@ class PropertyModel {
       bedrooms: json['bedrooms'],
       bathrooms: json['bathrooms'],
       areaSqFt: json['areaSqFt'] ?? json['area_sq_ft']?.toDouble(),
-      isAvailable: json['isAvailable'] ?? json['is_available'] ?? true,
+      // Determine availability from multiple possible API fields. API may return
+      // `isActive`, `isAvailable`, `status` (e.g. 'active'|'expired') or numeric/string flags.
+      isAvailable: (() {
+        final valCandidates = [
+          json['isActive'],
+          json['is_active'],
+          json['isAvailable'],
+          json['is_available'],
+          json['status'],
+        ];
+
+        bool parseBool(dynamic v) {
+          if (v == null) return false;
+          if (v is bool) return v;
+          if (v is num) return v != 0;
+          final s = v.toString().toLowerCase();
+          if (s == 'true' ||
+              s == '1' ||
+              s == 'yes' ||
+              s == 'active' ||
+              s == 'available')
+            return true;
+          return false;
+        }
+
+        // If status explicitly given as string like 'expired' or 'active', prefer that.
+        final statusVal = json['status'] ?? json['state'];
+        if (statusVal != null) {
+          final s = statusVal.toString().toLowerCase();
+          if (s == 'expired' || s == 'inactive' || s == 'disabled')
+            return false;
+          if (s == 'active' || s == 'available' || s == 'enabled') return true;
+        }
+
+        // Otherwise check boolean-like candidates in order.
+        for (final c in valCandidates) {
+          if (c == null) continue;
+          if (c is String || c is num || c is bool) return parseBool(c);
+        }
+
+        // Default to true to preserve previous behavior when server doesn't provide info.
+        return true;
+      })(),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : null,
+          ? DateTime.parse(json['created_at'])
+          : null,
       isUnlocked: json['isUnlocked'],
       existingFlatmates: (json['existingFlatmates'] ?? 0) as int,
     );

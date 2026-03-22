@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/utils/extensions.dart';
 import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/widgets/loading_widget.dart';
 import '../../../domain/enums/appointment_status.dart';
@@ -44,26 +45,24 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
       body: ownerVM.isAppointmentsLoading
           ? const LoadingWidget(message: 'Loading appointments...')
           : ownerVM.appointments.isEmpty
-              ? const EmptyStateWidget(
-                  icon: Icons.event_busy_rounded,
-                  title: 'No appointments yet',
-                  subtitle: 'Visit requests will appear here',
-                )
-              : RefreshIndicator(
-                  onRefresh: () async {
-                    await ownerVM.loadAppointments();
-                  },
-                  child: ListView.builder(
-                    padding:
-                        const EdgeInsets.all(AppConstants.spacingLg),
-                    itemCount: ownerVM.appointments.length,
-                    itemBuilder: (context, index) {
-                      final appointment = ownerVM.appointments[index];
-                      return _buildAppointmentCard(
-                          context, appointment, ownerVM);
-                    },
-                  ),
-                ),
+          ? const EmptyStateWidget(
+              icon: Icons.event_busy_rounded,
+              title: 'No appointments yet',
+              subtitle: 'Visit requests will appear here',
+            )
+          : RefreshIndicator(
+              onRefresh: () async {
+                await ownerVM.loadAppointments();
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.all(AppConstants.spacingLg),
+                itemCount: ownerVM.appointments.length,
+                itemBuilder: (context, index) {
+                  final appointment = ownerVM.appointments[index];
+                  return _buildAppointmentCard(context, appointment, ownerVM);
+                },
+              ),
+            ),
     );
   }
 
@@ -72,7 +71,31 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
     dynamic appointment,
     OwnerViewModel ownerVM,
   ) {
-    final statusColor = _getStatusColor(appointment.status);
+    // Normalize status: backend may return a String or enum value
+    final AppointmentStatus status = appointment.status is AppointmentStatus
+        ? appointment.status as AppointmentStatus
+        : AppointmentStatus.fromString(
+            appointment.status?.toString() ?? 'pending',
+          );
+
+    final statusColor = _getStatusColor(status);
+
+    String formatScheduledDate(dynamic value) {
+      if (value == null) return '-';
+      if (value is DateTime) return value.formatted;
+      if (value is String) {
+        try {
+          return DateTime.parse(value).formatted;
+        } catch (_) {
+          return value;
+        }
+      }
+      try {
+        return (value as DateTime).formatted;
+      } catch (_) {
+        return value.toString();
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
@@ -97,11 +120,12 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusSm),
-                  child: appointment.propertyImage.isNotEmpty
+                  borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+                  child:
+                      (appointment.propertyImage != null &&
+                          appointment.propertyImage.toString().isNotEmpty)
                       ? Image.network(
-                          appointment.propertyImage,
+                          appointment.propertyImage.toString(),
                           width: 56,
                           height: 56,
                           fit: BoxFit.cover,
@@ -161,7 +185,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    appointment.status.label,
+                    status.label,
                     style: AppTextStyles.caption.copyWith(
                       color: statusColor,
                       fontWeight: FontWeight.w600,
@@ -186,7 +210,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  appointment.scheduledDate.formatted,
+                  formatScheduledDate(appointment.scheduledDate),
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -199,7 +223,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  appointment.scheduledTime,
+                  appointment.scheduledTime?.toString() ?? '-',
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -213,7 +237,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  appointment.customerPhone,
+                  appointment.customerPhone?.toString() ?? '-',
                   style: AppTextStyles.bodySmall,
                 ),
               ],
@@ -221,7 +245,7 @@ class _OwnerAppointmentsScreenState extends State<OwnerAppointmentsScreen> {
           ),
 
           // ── Action Buttons (only for pending) ──
-          if (appointment.status == AppointmentStatus.pending) ...[
+          if (status == AppointmentStatus.pending) ...[
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(AppConstants.spacingMd),

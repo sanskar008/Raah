@@ -158,8 +158,9 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceVariant,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusSm,
+                        ),
                       ),
                       child: const Icon(
                         Icons.menu_rounded,
@@ -180,10 +181,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          'Find your perfect stay',
-                          style: AppTextStyles.h3,
-                        ),
+                        Text('Find your perfect stay', style: AppTextStyles.h3),
                       ],
                     ),
                   ),
@@ -201,7 +199,11 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
                       radius: 22,
                       backgroundColor: AppColors.primary,
                       child: Text(
-                        (authVM.user?.name ?? 'U')[0].toUpperCase(),
+                        (authVM.user?.name != null &&
+                                    authVM.user!.name.isNotEmpty
+                                ? authVM.user!.name[0]
+                                : 'U')
+                            .toUpperCase(),
                         style: const TextStyle(
                           color: AppColors.textOnPrimary,
                           fontWeight: FontWeight.w600,
@@ -234,9 +236,7 @@ class _CustomerHomeScreenState extends State<CustomerHomeScreen> {
             const SizedBox(height: AppConstants.spacingSm),
 
             // ── Property List ──
-            Expanded(
-              child: _buildPropertyList(homeVM),
-            ),
+            Expanded(child: _buildPropertyList(homeVM)),
           ],
         ),
       ),

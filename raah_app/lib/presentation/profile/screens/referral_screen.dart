@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/constants/api_endpoints.dart';
 import '../../auth/viewmodels/auth_viewmodel.dart';
 
@@ -31,10 +33,26 @@ class _ReferralScreenState extends State<ReferralScreen> {
   }
 
   Future<void> _loadReferralInfo() async {
-    final apiService = context.read<ApiService>();
     final authVM = context.read<AuthViewModel>();
+
     try {
+      // ApiService may not be provided in some widget trees (screens access
+      // repositories directly). Guard the lookup and fall back to cached
+      // auth data when ApiService isn't available or the network call fails.
+      ApiService apiService;
+      try {
+        apiService = context.read<ApiService>();
+      } catch (err) {
+        debugPrint(
+          'ReferralScreen: ApiService provider not found, creating local instance.',
+        );
+        apiService = ApiService(storage: SecureStorageService());
+      }
+      debugPrint('ReferralScreen: requesting ${ApiEndpoints.referralInfo}');
       final response = await apiService.get(ApiEndpoints.referralInfo);
+      debugPrint(
+        'ReferralScreen: referral API response: ${response != null ? jsonEncode(response) : 'null'}',
+      );
       if (!mounted) return;
       setState(() {
         _referralCode = response['referralCode']?.toString();
@@ -42,16 +60,31 @@ class _ReferralScreenState extends State<ReferralScreen> {
         _coinsEarned = (response['coinsEarnedFromReferrals'] ?? 0) as int;
         _isLoading = false;
       });
+      debugPrint(
+        'ReferralScreen: loaded referralCode=${_referralCode ?? 'null'}, referredCount=$_referredCount, coins=$_coinsEarned',
+      );
     } catch (e) {
+      // Detailed error logging for easier debugging
+      debugPrint('ReferralScreen: failed to fetch referral info: $e');
+      try {
+        // print stack trace if available
+        // ignore: avoid_print
+        // (stack trace captured by logging system during runtime)
+      } catch (_) {}
       if (!mounted) return;
       // Fallback to locally cached user data
       final user = authVM.user;
+      debugPrint(
+        'ReferralScreen: falling back to cached user: ${user != null ? jsonEncode(user.toJson()) : 'null'}',
+      );
       setState(() {
         _referralCode = user?.referralCode;
         _referredCount = user?.referredCount ?? 0;
         _coinsEarned = (user?.referredCount ?? 0) * 5;
         _isLoading = false;
-        _error = _referralCode == null ? 'Could not load referral info' : null;
+        _error = _referralCode == null
+            ? 'Could not load referral info: ${e.toString()}'
+            : null;
       });
     }
   }
@@ -72,10 +105,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
     if (_referralCode == null) return;
     // Using share_plus would be ideal, but we don't have it in pubspec.
     // For now, copy to clipboard with a friendly message.
-    Clipboard.setData(ClipboardData(
-      text:
-          'Join me on Raah — the best rental discovery app! Use my referral code $_referralCode when signing up to get started. 🏠',
-    ));
+    Clipboard.setData(
+      ClipboardData(
+        text:
+            'Join me on Raah — the best rental discovery app! Use my referral code $_referralCode when signing up to get started. 🏠',
+      ),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Share message copied to clipboard!'),
@@ -113,8 +148,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusLg),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusLg,
+                      ),
                     ),
                     child: Column(
                       children: [
@@ -126,9 +162,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         const SizedBox(height: AppConstants.spacingMd),
                         Text(
                           'Earn 5 Coins Per Referral',
-                          style: AppTextStyles.h3.copyWith(
-                            color: Colors.white,
-                          ),
+                          style: AppTextStyles.h3.copyWith(color: Colors.white),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: AppConstants.spacingSm),
@@ -179,13 +213,15 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       padding: const EdgeInsets.all(AppConstants.spacingMd),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusMd,
+                        ),
                       ),
                       child: Text(
                         _error!,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     )
                   else
@@ -196,8 +232,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusMd,
+                        ),
                         border: Border.all(
                           color: AppColors.primary.withValues(alpha: 0.3),
                           width: 1.5,
@@ -241,8 +278,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppConstants.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusMd,
+                          ),
                         ),
                       ),
                     ),
@@ -261,14 +299,12 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   _stepItem(
                     step: '2',
                     title: 'Friend signs up',
-                    subtitle:
-                        'They enter your code during registration',
+                    subtitle: 'They enter your code during registration',
                   ),
                   _stepItem(
                     step: '3',
                     title: 'You earn 5 coins',
-                    subtitle:
-                        'Coins are credited instantly to your account',
+                    subtitle: 'Coins are credited instantly to your account',
                   ),
                 ],
               ),
@@ -293,10 +329,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
         children: [
           Icon(icon, color: color, size: 28),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTextStyles.h2.copyWith(color: color),
-          ),
+          Text(value, style: AppTextStyles.h2.copyWith(color: color)),
           Text(label, style: AppTextStyles.caption),
         ],
       ),
@@ -338,8 +371,9 @@ class _ReferralScreenState extends State<ReferralScreen> {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 Text(
                   subtitle,

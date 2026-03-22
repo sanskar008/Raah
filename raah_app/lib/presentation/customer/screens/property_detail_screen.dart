@@ -326,14 +326,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         Row(
                           children: [
                             CircleAvatar(
-                              radius: 24,
+                              radius: 18,
                               backgroundColor: AppColors.primaryLight,
                               child: Text(
-                                property.ownerName[0].toUpperCase(),
+                                (property.ownerName.isNotEmpty ? property.ownerName[0] : '?').toUpperCase(),
                                 style: const TextStyle(
                                   color: AppColors.textOnPrimary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),

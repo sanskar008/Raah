@@ -11,10 +11,7 @@ import '../viewmodels/rental_viewmodel.dart';
 class RentalPaymentScreen extends StatefulWidget {
   final PropertyModel property;
 
-  const RentalPaymentScreen({
-    super.key,
-    required this.property,
-  });
+  const RentalPaymentScreen({super.key, required this.property});
 
   @override
   State<RentalPaymentScreen> createState() => _RentalPaymentScreenState();
@@ -37,9 +34,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Purchase Rental Period'),
-      ),
+      appBar: AppBar(title: const Text('Purchase Rental Period')),
       body: rentalVM.isLoading
           ? const LoadingWidget()
           : SingleChildScrollView(
@@ -53,10 +48,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                   const SizedBox(height: AppConstants.spacingXl),
 
                   // ── Rental Plans ──
-                  Text(
-                    'Select Rental Period',
-                    style: AppTextStyles.h3,
-                  ),
+                  Text('Select Rental Period', style: AppTextStyles.h3),
                   const SizedBox(height: AppConstants.spacingMd),
 
                   if (rentalVM.rentalPlans.isEmpty)
@@ -64,7 +56,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                   else
                     ...rentalVM.rentalPlans.map((plan) {
                       return _buildPlanCard(context, plan, rentalVM);
-                    }).toList(),
+                    }),
 
                   const SizedBox(height: AppConstants.spacingXl),
 
@@ -87,8 +79,9 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Text('Purchase Rental Period'),
@@ -102,7 +95,9 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                     padding: const EdgeInsets.all(AppConstants.spacingMd),
                     decoration: BoxDecoration(
                       color: AppColors.accentSoft,
-                      borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusMd,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -140,10 +135,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.property.title,
-            style: AppTextStyles.h4,
-          ),
+          Text(widget.property.title, style: AppTextStyles.h4),
           const SizedBox(height: 4),
           Text(
             '${widget.property.area}, ${widget.property.city}',
@@ -156,11 +148,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
     );
   }
 
-  Widget _buildPlanCard(
-    BuildContext context,
-    plan,
-    RentalViewModel rentalVM,
-  ) {
+  Widget _buildPlanCard(BuildContext context, plan, RentalViewModel rentalVM) {
     final isSelected = _selectedDays == plan.days;
 
     return GestureDetector(
@@ -176,9 +164,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusLg),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : AppColors.divider,
+            color: isSelected ? AppColors.primary : AppColors.divider,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -193,16 +179,10 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                   color: isSelected ? AppColors.primary : AppColors.divider,
                   width: 2,
                 ),
-                color: isSelected
-                    ? AppColors.primary
-                    : Colors.transparent,
+                color: isSelected ? AppColors.primary : Colors.transparent,
               ),
               child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 16,
-                    )
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
                   : null,
             ),
             const SizedBox(width: AppConstants.spacingMd),
@@ -210,15 +190,9 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                    Text(
-                      plan.name,
-                      style: AppTextStyles.h4,
-                    ),
+                  Text(plan.name, style: AppTextStyles.h4),
                   const SizedBox(height: 4),
-                  Text(
-                    plan.description,
-                    style: AppTextStyles.bodySmall,
-                  ),
+                  Text(plan.description, style: AppTextStyles.bodySmall),
                 ],
               ),
             ),
@@ -227,9 +201,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
               children: [
                 Text(
                   '₹${plan.price.toStringAsFixed(0)}',
-                  style: AppTextStyles.h4.copyWith(
-                    color: AppColors.primary,
-                  ),
+                  style: AppTextStyles.h4.copyWith(color: AppColors.primary),
                 ),
               ],
             ),
@@ -275,26 +247,30 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
       return;
     }
 
-    final plan = rentalVM.rentalPlans.firstWhere((p) => p.days == _selectedDays);
+    final plan = rentalVM.rentalPlans.firstWhere(
+      (p) => p.days == _selectedDays,
+    );
     final isFree = plan.price == 0;
 
+    final parentContext = context;
+
     showDialog(
-      context: context,
+      context: parentContext,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Purchase'),
         content: Text(
           isFree
-              ? 'Activate ${_selectedDays} days free rental period?'
-              : 'Purchase ${_selectedDays} days rental period for ₹${plan.price.toStringAsFixed(0)}?',
+              ? 'Activate $_selectedDays days free rental period?'
+              : 'Purchase $_selectedDays days rental period for ₹${plan.price.toStringAsFixed(0)}?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(parentContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(parentContext);
               final success = await rentalVM.purchaseRentalPeriod(
                 propertyId: widget.property.id,
                 days: _selectedDays!,
@@ -303,7 +279,7 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
               if (!mounted) return;
 
               if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(parentContext).showSnackBar(
                   SnackBar(
                     content: Text(
                       isFree
@@ -313,9 +289,9 @@ class _RentalPaymentScreenState extends State<RentalPaymentScreen> {
                     backgroundColor: AppColors.success,
                   ),
                 );
-                Navigator.pop(context);
+                Navigator.pop(parentContext);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(parentContext).showSnackBar(
                   SnackBar(
                     content: Text(rentalVM.error ?? 'Purchase failed'),
                     backgroundColor: AppColors.error,

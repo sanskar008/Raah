@@ -182,7 +182,7 @@ class _PropertyCardState extends State<PropertyCard> {
                               radius: 12,
                               backgroundColor: AppColors.primaryLight,
                               child: Text(
-                                property.ownerName[0].toUpperCase(),
+                                (property.ownerName.isNotEmpty ? property.ownerName[0] : '?').toUpperCase(),
                                 style: const TextStyle(
                                   color: AppColors.textOnPrimary,
                                   fontSize: 11,

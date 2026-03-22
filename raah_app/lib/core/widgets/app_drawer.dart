@@ -107,7 +107,8 @@ class AppDrawer extends StatelessWidget {
                     _DrawerItem(
                       icon: Icons.list_alt_rounded,
                       label: 'My Listings',
-                      onTap: () => Navigator.pop(context), // Already on dashboard
+                      onTap: () =>
+                          Navigator.pop(context), // Already on dashboard
                     ),
                     _DrawerItem(
                       icon: Icons.account_balance_wallet_rounded,
@@ -134,17 +135,13 @@ class AppDrawer extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const AddPropertyScreen(
-                                showCoinsInfo: false),
+                            builder: (_) =>
+                                const AddPropertyScreen(showCoinsInfo: false),
                           ),
                         );
                       },
                     ),
-                    _DrawerItem(
-                      icon: Icons.list_alt_rounded,
-                      label: 'My Properties',
-                      onTap: () => Navigator.pop(context),
-                    ),
+                    // 'My Properties' removed for owners per request
                     _DrawerItem(
                       icon: Icons.event_note_rounded,
                       label: 'Appointments',
@@ -153,8 +150,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                const OwnerAppointmentsScreen(),
+                            builder: (_) => const OwnerAppointmentsScreen(),
                           ),
                         );
                       },
@@ -167,8 +163,7 @@ class AppDrawer extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                const RentalManagementScreen(),
+                            builder: (_) => const RentalManagementScreen(),
                           ),
                         );
                       },
@@ -282,7 +277,7 @@ class AppDrawer extends StatelessWidget {
               radius: 30,
               backgroundColor: AppColors.primary,
               child: Text(
-                (user?.name ?? 'U')[0].toUpperCase(),
+                (user?.name != null && user!.name.isNotEmpty ? user.name[0] : 'U').toUpperCase(),
                 style: const TextStyle(
                   color: AppColors.textOnPrimary,
                   fontWeight: FontWeight.w700,
@@ -331,10 +326,7 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
             // Arrow to profile
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.textHint,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
           ],
         ),
       ),
@@ -373,9 +365,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.pop(ctx);
               authVM.logout();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Sign Out'),
           ),
         ],

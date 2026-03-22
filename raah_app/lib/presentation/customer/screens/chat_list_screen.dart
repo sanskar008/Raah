@@ -32,63 +32,66 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Chats'),
-      ),
+      appBar: AppBar(title: const Text('Chats')),
       body: chatVM.isLoading && chatVM.conversations.isEmpty
           ? const LoadingWidget()
           : chatVM.conversations.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        size: 64,
-                        color: AppColors.textHint,
-                      ),
-                      const SizedBox(height: AppConstants.spacingMd),
-                      Text(
-                        'No conversations yet',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: AppConstants.spacingSm),
-                      Text(
-                        'Tap Inquiry or Chat on a property to start',
-                        style: AppTextStyles.bodySmall,
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    size: 64,
+                    color: AppColors.textHint,
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => chatVM.loadConversations(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppConstants.spacingMd),
-                    itemCount: chatVM.conversations.length,
-                    itemBuilder: (context, index) {
-                      final conv = chatVM.conversations[index];
-                      return _buildConversationTile(context, conv);
-                    },
+                  const SizedBox(height: AppConstants.spacingMd),
+                  Text(
+                    'No conversations yet',
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: AppConstants.spacingSm),
+                  Text(
+                    'Tap Inquiry or Chat on a property to start',
+                    style: AppTextStyles.bodySmall,
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: () => chatVM.loadConversations(),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(AppConstants.spacingMd),
+                itemCount: chatVM.conversations.length,
+                itemBuilder: (context, index) {
+                  final conv = chatVM.conversations[index];
+                  return _buildConversationTile(context, conv);
+                },
+              ),
+            ),
     );
   }
 
-  Widget _buildConversationTile(BuildContext context, Map<String, dynamic> conv) {
+  Widget _buildConversationTile(
+    BuildContext context,
+    Map<String, dynamic> conv,
+  ) {
     final property = conv['propertyId'] as Map<String, dynamic>? ?? {};
     final owner = conv['ownerId'] as Map<String, dynamic>? ?? {};
     final customer = conv['customerId'] as Map<String, dynamic>? ?? {};
     final authVM = context.read<AuthViewModel>();
     final myId = authVM.user?.id ?? '';
-    final isOwner = conv['ownerId'] != null &&
+    final isOwner =
+        conv['ownerId'] != null &&
         (owner['_id']?.toString() ?? owner['id']?.toString()) == myId;
     final otherName = isOwner
         ? (customer['name'] ?? 'Customer')
         : (owner['name'] ?? 'Owner');
     final propertyTitle = property['title'] ?? 'Property';
-    final propertyId = property['_id']?.toString() ?? property['id']?.toString() ?? '';
+    final propertyId =
+        property['_id']?.toString() ?? property['id']?.toString() ?? '';
     final lastText = conv['lastMessageText'] as String?;
     final conversationId = conv['_id']?.toString() ?? conv['id']?.toString();
 
@@ -117,7 +120,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
         leading: CircleAvatar(
           backgroundColor: AppColors.primaryLight,
           child: Text(
-            otherName[0].toUpperCase(),
+            (otherName != null && otherName.toString().isNotEmpty
+                    ? otherName.toString()[0]
+                    : '?')
+                .toUpperCase(),
             style: const TextStyle(
               color: AppColors.textOnPrimary,
               fontWeight: FontWeight.w600,
