@@ -1,6 +1,6 @@
 name: raah_app
 description: "Raah - A rental discovery app for students and people moving to a new city."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -53,6 +53,8 @@ dependencies:
 
   # Location services
   geolocator: ^13.0.2
+  # Reverse geocoding to convert lat/lng to locality/city
+  geocoding: ^2.0.5
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +76,6 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo.png"
-  adaptive_icon_background: "#1A3C5E"  # Primary navy blue color (matches login page)
+  adaptive_icon_background: "#1A3C5E" # Primary navy blue color (matches login page)
   adaptive_icon_foreground: "assets/logo.png"
   remove_alpha_ios: true

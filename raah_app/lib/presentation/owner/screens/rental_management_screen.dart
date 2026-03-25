@@ -116,11 +116,30 @@ class _RentalManagementScreenState extends State<RentalManagementScreen>
   }
 
   Widget _buildPropertyCard(Map<String, dynamic> property) {
-    final isActive = _toBool(
+    // Prefer server-provided rental end / daysRemaining to determine active state.
+    final daysRemaining = _toInt(property['daysRemaining'] ?? 0);
+    final rentalPeriodEndStr = property['rentalPeriodEnd']?.toString();
+    DateTime? rentalPeriodEnd;
+    if (rentalPeriodEndStr != null && rentalPeriodEndStr.isNotEmpty) {
+      try {
+        rentalPeriodEnd = DateTime.parse(rentalPeriodEndStr);
+      } catch (_) {
+        rentalPeriodEnd = null;
+      }
+    }
+
+    final serverFlag = _toBool(
       property['isActive'] ?? property['isAvailable'] ?? false,
     );
-    final daysRemaining = _toInt(property['daysRemaining'] ?? 0);
-    final rentalPeriodEnd = property['rentalPeriodEnd']?.toString();
+
+    final isActive = (() {
+      if (rentalPeriodEnd != null) {
+        return DateTime.now().isBefore(rentalPeriodEnd);
+      }
+      if (daysRemaining > 0) return true;
+      // Fall back to whatever server flagged; default false if undefined.
+      return serverFlag;
+    })();
 
     return GestureDetector(
       onTap: () {
@@ -209,10 +228,11 @@ class _RentalManagementScreenState extends State<RentalManagementScreen>
                   ),
                 ],
               ),
-              if (rentalPeriodEnd != null && rentalPeriodEnd.isNotEmpty) ...[
+              if (rentalPeriodEndStr != null &&
+                  rentalPeriodEndStr.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Expires: ${_formatDate(rentalPeriodEnd)}',
+                  'Expires: ${_formatDate(rentalPeriodEndStr)}',
                   style: AppTextStyles.caption,
                 ),
               ],

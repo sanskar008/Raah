@@ -52,6 +52,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             await ownerVM.loadAppointments();
           },
           child: CustomScrollView(
+            // Ensure scrollability so the full properties list can be scrolled
+            physics: const AlwaysScrollableScrollPhysics(),
+            primary: true,
             slivers: [
               // ── Header ──
               SliverToBoxAdapter(

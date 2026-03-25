@@ -40,8 +40,9 @@ class _CoinHistoryScreenState extends State<CoinHistoryScreen> {
         _currentBalance = (response['currentBalance'] ?? 0) as int;
         _freeViewsUsed = (response['freeViewsUsed'] ?? 0) as int;
         _freeViewsRemaining = (response['freeViewsRemaining'] ?? 0) as int;
-        _transactions =
-            txList.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _transactions = txList
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -67,82 +68,78 @@ class _CoinHistoryScreenState extends State<CoinHistoryScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Text(_error!, style: AppTextStyles.bodyMedium),
-                )
-              : Column(
-                  children: [
-                    // ── Summary cards ──
-                    Container(
-                      color: AppColors.surface,
-                      padding: const EdgeInsets.all(AppConstants.spacingLg),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _summaryCard(
-                              icon: Icons.toll_rounded,
-                              value: '$_currentBalance',
-                              label: 'Current Balance',
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: AppConstants.spacingMd),
-                          Expanded(
-                            child: _summaryCard(
-                              icon: Icons.visibility_outlined,
-                              value: '$_freeViewsUsed / 3',
-                              label: 'Free Views Used',
-                              color: AppColors.accent,
-                            ),
-                          ),
-                          const SizedBox(width: AppConstants.spacingMd),
-                          Expanded(
-                            child: _summaryCard(
-                              icon: Icons.lock_open_outlined,
-                              value: '$_freeViewsRemaining',
-                              label: 'Free Views Left',
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
+          ? Center(child: Text(_error!, style: AppTextStyles.bodyMedium))
+          : Column(
+              children: [
+                // ── Summary cards ──
+                Container(
+                  color: AppColors.surface,
+                  padding: const EdgeInsets.all(AppConstants.spacingLg),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _summaryCard(
+                          icon: Icons.toll_rounded,
+                          value: '$_currentBalance',
+                          label: 'Current Balance',
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-
-                    // ── Transaction list ──
-                    Expanded(
-                      child: _transactions.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.history_rounded,
-                                    size: 56,
-                                    color: AppColors.textHint,
-                                  ),
-                                  const SizedBox(height: AppConstants.spacingMd),
-                                  Text(
-                                    'No transactions yet',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(AppConstants.spacingLg),
-                              itemCount: _transactions.length,
-                              separatorBuilder: (_, _) =>
-                                  const Divider(height: 1),
-                              itemBuilder: (context, index) {
-                                return _transactionTile(
-                                    _transactions[index]);
-                              },
-                            ),
-                    ),
-                  ],
+                      const SizedBox(width: AppConstants.spacingMd),
+                      Expanded(
+                        child: _summaryCard(
+                          icon: Icons.visibility_outlined,
+                          value: '$_freeViewsUsed / 3',
+                          label: 'Free Views Used',
+                          color: AppColors.accent,
+                        ),
+                      ),
+                      const SizedBox(width: AppConstants.spacingMd),
+                      Expanded(
+                        child: _summaryCard(
+                          icon: Icons.lock_open_outlined,
+                          value: '$_freeViewsRemaining',
+                          label: 'Free Views Left',
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+
+                // ── Transaction list ──
+                Expanded(
+                  child: _transactions.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.history_rounded,
+                                size: 56,
+                                color: AppColors.textHint,
+                              ),
+                              const SizedBox(height: AppConstants.spacingMd),
+                              Text(
+                                'No history available',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(AppConstants.spacingLg),
+                          itemCount: _transactions.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            return _transactionTile(_transactions[index]);
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -198,8 +195,8 @@ class _CoinHistoryScreenState extends State<CoinHistoryScreen> {
     final icon = isCredit
         ? Icons.add_circle_outline_rounded
         : (amount == 0
-            ? Icons.visibility_outlined
-            : Icons.remove_circle_outline_rounded);
+              ? Icons.visibility_outlined
+              : Icons.remove_circle_outline_rounded);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppConstants.spacingMd),
@@ -229,7 +226,9 @@ class _CoinHistoryScreenState extends State<CoinHistoryScreen> {
                 ),
                 if (createdAt != null)
                   Text(
-                    DateFormat('dd MMM yyyy, hh:mm a').format(createdAt.toLocal()),
+                    DateFormat(
+                      'dd MMM yyyy, hh:mm a',
+                    ).format(createdAt.toLocal()),
                     style: AppTextStyles.caption,
                   ),
               ],
@@ -240,18 +239,13 @@ class _CoinHistoryScreenState extends State<CoinHistoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                amount == 0
-                    ? 'Free'
-                    : '${isCredit ? '+' : ''}$amount coins',
+                amount == 0 ? 'Free' : '${isCredit ? '+' : ''}$amount coins',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: amount == 0 ? AppColors.textSecondary : color,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              Text(
-                'Balance: $balanceAfter',
-                style: AppTextStyles.caption,
-              ),
+              Text('Balance: $balanceAfter', style: AppTextStyles.caption),
             ],
           ),
         ],

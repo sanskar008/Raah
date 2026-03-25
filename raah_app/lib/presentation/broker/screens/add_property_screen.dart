@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -46,6 +47,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   final List<String> _selectedAmenities = [];
   int _existingFlatmates = 0;
   bool _isSubmitting = false;
+  bool _isDetectingLocation = false;
 
   // Image handling
   final ImagePicker _imagePicker = ImagePicker();
@@ -304,6 +306,84 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     }
   }
 
+  Future<void> _detectAndFillLocation() async {
+    setState(() => _isDetectingLocation = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+        return;
+      }
+
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      final placemarks = await placemarkFromCoordinates(
+        pos.latitude,
+        pos.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        final detectedArea = p.subLocality?.trim().isNotEmpty == true
+            ? p.subLocality!
+            : (p.locality?.trim().isNotEmpty == true
+                  ? p.locality!
+                  : p.administrativeArea ?? '');
+        final detectedCity =
+            p.locality ?? p.subAdministrativeArea ?? p.administrativeArea ?? '';
+
+        setState(() {
+          if (detectedArea.isNotEmpty) _areaController.text = detectedArea;
+          if (detectedCity.isNotEmpty) _cityController.text = detectedCity;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location detected and filled'),
+              backgroundColor: AppColors.success,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Unable to determine locality from coordinates'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to detect location: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isDetectingLocation = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -446,6 +526,22 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                       hint: 'Koramangala',
                       controller: _areaController,
                       validator: (v) => Validators.required(v, 'Area'),
+                      suffixIcon: _isDetectingLocation
+                          ? const SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: Padding(
+                                padding: EdgeInsets.all(6.0),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              icon: const Icon(Icons.my_location, size: 20),
+                              onPressed: _detectAndFillLocation,
+                              tooltip: 'Use current location',
+                            ),
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -42,6 +43,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
     final propertyVM = context.watch<PropertyDetailViewModel>();
     final property = propertyVM.property ?? widget.property;
     final isUnlocked = property.isUnlocked ?? false;
+    final isLoading = propertyVM.isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -100,9 +102,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
           // ── Content ──
           SliverToBoxAdapter(
             child: Container(
-              decoration: const BoxDecoration(
-                color: AppColors.background,
-              ),
+              decoration: const BoxDecoration(color: AppColors.background),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -135,7 +135,13 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         const SizedBox(height: AppConstants.spacingMd),
 
                         // Title
-                        Text(property.title, style: AppTextStyles.h2),
+                        if (isLoading)
+                          _shimmerBox(
+                            height: 28,
+                            width: MediaQuery.of(context).size.width * 0.6,
+                          )
+                        else
+                          Text(property.title, style: AppTextStyles.h2),
 
                         const SizedBox(height: AppConstants.spacingSm),
 
@@ -149,12 +155,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                             const SizedBox(width: 4),
                             Expanded(
-                              child: Text(
-                                '${property.address}, ${property.area}, ${property.city}',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
+                              child: isLoading
+                                  ? _shimmerBox(
+                                      height: 14,
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.5,
+                                    )
+                                  : Text(
+                                      '${property.address}, ${property.area}, ${property.city}',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -170,7 +183,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.success.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(AppConstants.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppConstants.radiusMd,
+                              ),
                               border: Border.all(
                                 color: AppColors.success.withValues(alpha: 0.3),
                               ),
@@ -202,22 +217,32 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         Row(
                           children: [
                             Expanded(
-                              child: property.existingFlatmates > 0
-                                  ? _splitRentTile(property)
-                                  : _infoTile(
-                                      'Rent',
-                                      property.rent.toRent,
-                                      Icons.payments_outlined,
-                                    ),
+                              child: isLoading
+                                  ? _shimmerBox(
+                                      height: 48,
+                                      width: double.infinity,
+                                    )
+                                  : (property.existingFlatmates > 0
+                                        ? _splitRentTile(property)
+                                        : _infoTile(
+                                            'Rent',
+                                            property.rent.toRent,
+                                            Icons.payments_outlined,
+                                          )),
                             ),
                             const SizedBox(width: AppConstants.spacingMd),
                             if (property.deposit != null)
                               Expanded(
-                                child: _infoTile(
-                                  'Deposit',
-                                  property.deposit!.toCurrency,
-                                  Icons.account_balance_wallet_outlined,
-                                ),
+                                child: isLoading
+                                    ? _shimmerBox(
+                                        height: 48,
+                                        width: double.infinity,
+                                      )
+                                    : _infoTile(
+                                        'Deposit',
+                                        property.deposit!.toCurrency,
+                                        Icons.account_balance_wallet_outlined,
+                                      ),
                               ),
                           ],
                         ),
@@ -269,6 +294,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         const SizedBox(height: AppConstants.spacingMd),
                         if (isCustomer && !isUnlocked)
                           _buildLockedContent()
+                        else if (isLoading)
+                          _shimmerBox(height: 80, width: double.infinity)
                         else
                           Text(
                             property.description,
@@ -295,6 +322,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           const SizedBox(height: AppConstants.spacingMd),
                           if (isCustomer && !isUnlocked)
                             _buildLockedContent()
+                          else if (isLoading)
+                            _shimmerBox(height: 40, width: double.infinity)
                           else
                             Wrap(
                               spacing: 10,
@@ -329,7 +358,10 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                               radius: 18,
                               backgroundColor: AppColors.primaryLight,
                               child: Text(
-                                (property.ownerName.isNotEmpty ? property.ownerName[0] : '?').toUpperCase(),
+                                (property.ownerName.isNotEmpty
+                                        ? property.ownerName[0]
+                                        : '?')
+                                    .toUpperCase(),
                                 style: const TextStyle(
                                   color: AppColors.textOnPrimary,
                                   fontWeight: FontWeight.w700,
@@ -338,12 +370,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                             ),
                             const SizedBox(width: AppConstants.spacingMd),
                             Expanded(
-                              child: Text(
-                                property.ownerName,
-                                style: AppTextStyles.bodyLarge.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                              child: isLoading
+                                  ? _shimmerBox(
+                                      height: 18,
+                                      width:
+                                          MediaQuery.of(context).size.width *
+                                          0.3,
+                                    )
+                                  : Text(
+                                      property.ownerName,
+                                      style: AppTextStyles.bodyLarge.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -352,26 +391,40 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () => _openChatWithOwner(context, property),
-                                icon: const Icon(Icons.question_answer_outlined, size: 18),
+                                onPressed: () =>
+                                    _openChatWithOwner(context, property),
+                                icon: const Icon(
+                                  Icons.question_answer_outlined,
+                                  size: 18,
+                                ),
                                 label: const Text('Inquiry'),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.primary,
-                                  side: const BorderSide(color: AppColors.primary),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  side: const BorderSide(
+                                    color: AppColors.primary,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(width: AppConstants.spacingMd),
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () => _openChatWithOwner(context, property),
-                                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                                onPressed: () =>
+                                    _openChatWithOwner(context, property),
+                                icon: const Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                  size: 18,
+                                ),
                                 label: const Text('Chat'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ),
@@ -423,16 +476,14 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         ),
                       ),
                       Text(
-                        (property.rent / (property.existingFlatmates + 1)).toRent,
+                        (property.rent / (property.existingFlatmates + 1))
+                            .toRent,
                         style: AppTextStyles.price.copyWith(
                           color: AppColors.success,
                         ),
                       ),
                     ] else
-                      Text(
-                        property.rent.toRent,
-                        style: AppTextStyles.price,
-                      ),
+                      Text(property.rent.toRent, style: AppTextStyles.price),
                     Text(
                       'Deposit: ${property.deposit?.toCurrency ?? 'N/A'}',
                       style: AppTextStyles.bodySmall,
@@ -450,9 +501,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                         ? null
                         : () => _handleUnlock(context, propertyVM),
                     icon: Icon(
-                      propertyVM.isUnlocking
-                          ? null
-                          : Icons.lock_open_outlined,
+                      propertyVM.isUnlocking ? null : Icons.lock_open_outlined,
                       size: 18,
                     ),
                     label: Text(
@@ -465,8 +514,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusMd,
+                        ),
                       ),
                     ),
                   ),
@@ -479,9 +529,8 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => AppointmentBookingScreen(
-                            property: property,
-                          ),
+                          builder: (_) =>
+                              AppointmentBookingScreen(property: property),
                         ),
                       );
                     },
@@ -492,8 +541,9 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       foregroundColor: AppColors.textOnPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusMd,
+                        ),
                       ),
                     ),
                   ),
@@ -592,10 +642,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       children: [
         Icon(icon, color: AppColors.primary, size: 26),
         const SizedBox(height: 6),
-        Text(
-          value,
-          style: AppTextStyles.h4.copyWith(fontSize: 16),
-        ),
+        Text(value, style: AppTextStyles.h4.copyWith(fontSize: 16)),
         Text(label, style: AppTextStyles.caption),
       ],
     );
@@ -611,17 +658,11 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _amenityIcon(amenity),
-            size: 16,
-            color: AppColors.primary,
-          ),
+          Icon(_amenityIcon(amenity), size: 16, color: AppColors.primary),
           const SizedBox(width: 6),
           Text(
             amenity,
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.label.copyWith(color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -666,21 +707,45 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.lock_outline,
-            color: AppColors.textHint,
-            size: 24,
-          ),
+          Icon(Icons.lock_outline, color: AppColors.textHint, size: 28),
           const SizedBox(width: AppConstants.spacingMd),
           Expanded(
-            child: Text(
-              'Unlock property to view this content',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This information is locked',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Use coins to unlock additional property details',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _shimmerBox({required double height, double? width}) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.surfaceVariant,
+      highlightColor: AppColors.surface,
+      child: Container(
+        height: height,
+        width: width ?? double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppConstants.radiusSm),
+        ),
       ),
     );
   }
@@ -710,7 +775,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
       }
     } else {
       final error = propertyVM.error ?? 'Failed to unlock property';
-      
+
       if (error.contains('Insufficient coins')) {
         // Show dialog to buy coins
         showDialog(
@@ -730,9 +795,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const CoinWalletScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const CoinWalletScreen()),
                   );
                 },
                 child: const Text('Buy Coins'),
@@ -742,10 +805,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(error), backgroundColor: AppColors.error),
         );
       }
     }

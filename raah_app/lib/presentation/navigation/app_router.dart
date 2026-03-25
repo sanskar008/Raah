@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../domain/enums/user_role.dart';
 import '../auth/viewmodels/auth_viewmodel.dart';
 import '../auth/screens/login_screen.dart';
+import '../landing/landing_screen.dart';
 import '../customer/screens/customer_home_screen.dart';
 import '../broker/screens/broker_dashboard_screen.dart';
 import '../owner/screens/owner_dashboard_screen.dart';
@@ -18,16 +19,12 @@ class AppRouter extends StatelessWidget {
 
     // Show loading while checking persisted auth
     if (!authVM.isInitialized) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Not logged in → Login
+    // Not logged in → Landing screen, then Login
     if (!authVM.isLoggedIn) {
-      return const LoginScreen();
+      return const LandingScreen();
     }
 
     // Logged in → Route by role

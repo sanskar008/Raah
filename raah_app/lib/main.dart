@@ -66,7 +66,7 @@ void main() async {
   // Fire-and-forget: warm the backend (Render) so cold starts are reduced.
   // This intentionally does not block app startup.
   apiService
-      .get('https://raah-cqwp.onrender.com/api', auth: false)
+      .get('https://raah-cqwp.onrender.com/api/health', auth: false)
       .then((_) => debugPrint('Backend warmup request sent.'))
       .catchError((e) => debugPrint('Backend warmup failed: $e'));
 
